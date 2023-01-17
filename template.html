@@ -41,9 +41,30 @@
 	<script type="text/babel">
 
 		
-		//----------------------- reducer ----------------------//
-		const reducer=(state={}, action)=>{
-			return state;
+		//----------------------- state0 Slider reducer ----------------------//
+		const slider1State0={
+			value:''
+		};
+		const slider2State0={
+			value:''
+		};
+
+		//----------------------- Slider reducer ----------------------//
+		const slider1Reducer=(state={...slider1State0}, action)=>{
+			const newState={...state};
+			const {value,type}=action;
+			if(type==='range1-onchange'){
+				newState['value']=value;
+			}
+			return newState;
+		}
+		const slider2Reducer=(state={...slider2State0}, action)=>{
+			const newState={...state};
+			const {value,type}=action;
+			if(type==='range2-onchange'){
+				newState['value']=value;
+			}
+			return newState;
 		}
 		
 		//----------------------- map state to props ----------------------//
@@ -51,36 +72,64 @@
 
 		//----------------------- map dispatch to props ----------------------//
 		const mapDispatchToProps= dispatchFunction=>({
-
+			'do-range1-onchange':event=>dispatchFunction({type:'range1-onchange',value:event.target.value}),
+			'do-range2-onchange':event=>dispatchFunction({type:'range2-onchange',value:event.target.value})
 		});
 		//----------------------- react component Provider ----------------------//
 		const Provider = ReactRedux.Provider;
 		//----------------------- connect function ----------------------//
 		const connect= ReactRedux.connect;
 		//----------------------- store i.e. STATE object ----------------------//
-		const store= Redux.createStore(reducer);
+		const store= Redux.createStore(Redux.combineReducers({
+			slider1:		slider1Reducer,
+			slider2:		slider2Reducer
+		}));
+		//----------------------- component Button ----------------------//
+		const Button=props=>{
+			const {text}=props;
+			const style={
+				padding:'0 0.8rem',
+				'font-size':'2rem',
+				'cursor':'pointer'
+			};
+			return <button style={style}>{text}
+			</button>;
+		};
 		//----------------------- component Slider ----------------------//
 		const Slider=props=>{
-			const {text,min,max}=props;
-			const style={
+	
+			const {min,max,value:value0,onChange,defaultValue}=props;
+			const value= value0==='' ? defaultValue : value0;
+			const text= value<60 ? `${value} minute(s)` : `${Math.floor(value/60)} hour(s), ${value%60} minutes`;
 			
+			const style={
+				
+			};
+			const valueStyle={
+				'text-align':'center'
+			};
+
+			const rangeStyle={
+				'cursor':'pointer'
 			};
 			return <div style={style}>
-				<div>{min}</div>
-				<button>-</button>
-				<input type='range' min={min} max={max}/>
-				<button>+</button>
+				<div style={valueStyle}>{text}</div>
+				<Button text={'-'}/>
+				<input style={rangeStyle} type='range' min={min} max={max} onInput={onChange} value={value}/>
+				<Button text={'+'}/>
 			</div>;
 		};
+
 		//----------------------- component SessionLength ----------------------//
 		const SessionLength=props=>{
-			const {text}=props;
+			const {text,slider}=props;
+			const {min,max,value,defaultValue,onChange}=slider;
 			const style={
 			
 			};
 			return <div style={style}>
 				<div>{text}</div>
-				<Slider min={1} max={'none'}/>
+				<Slider min={min} max={max} onChange={onChange} value={value} defaultValue={defaultValue}/>
 			</div>;
 		};
 		//----------------------- component Timer ----------------------//
@@ -121,13 +170,37 @@
 					'grid-column':'1/3',
 					'grid-row':'3'
 				};
+				const props=this.props;
+				
+				const {slider1,slider2}=props;
+				
+				/* break state */
+				const slider1Things={
+					value:			slider1.value,
+					min:			1,
+					max:			720,/*10hours*/
+					defaultValue:	5,
+					onChange:		props['do-range1-onchange']
+				};
+				
+				/* work state */
+				const slider2Things={
+					value:			slider2.value,
+					min:			1,
+					max:			90,
+					defaultValue:	25,
+					onChange:		props['do-range2-onchange']
+				};
+				
 				return (
 				<div style={style}>
 					
 					<h1 style={headerFooterStyle}>React Redux Work/Break Timer</h1>
 					
-					<SessionLength text="Break Length"/>
-					<SessionLength text="Session Length"/>
+					<SessionLength text="Break Length" slider={slider1Things}/>
+					
+					<SessionLength text="Session Length" slider={slider2Things}/>
+					
 					<Timer sentStyle={timerStyle}/>
 					
 					<footer style={headerFooterStyle}><p>by Abdullah Fatota</p></footer>
