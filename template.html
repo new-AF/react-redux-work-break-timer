@@ -73,7 +73,14 @@
 		//----------------------- map dispatch to props ----------------------//
 		const mapDispatchToProps= dispatchFunction=>({
 			'do-range1-onchange':event=>dispatchFunction({type:'range1-onchange',value:event.target.value}),
-			'do-range2-onchange':event=>dispatchFunction({type:'range2-onchange',value:event.target.value})
+			'do-range2-onchange':event=>dispatchFunction({type:'range2-onchange',value:event.target.value}),
+			/*---*/			
+			'do-range1-minus':event=>dispatchFunction({type:'range1-minus',value:event.target.value}),
+			'do-range1-plus':event=>dispatchFunction({type:'range1-plus',value:event.target.value}),
+			/**/
+			'do-range2-minus':event=>dispatchFunction({type:'range2-minus',value:event.target.value}),
+			'do-range2-plus':event=>dispatchFunction({type:'range2-plus',value:event.target.value}),
+
 		});
 		//----------------------- react component Provider ----------------------//
 		const Provider = ReactRedux.Provider;
@@ -86,13 +93,14 @@
 		}));
 		//----------------------- component Button ----------------------//
 		const Button=props=>{
-			const {text}=props;
+			const {text,onClick,onMouseDown}=props;
 			const style={
 				padding:'0 0.8rem',
 				'font-size':'2rem',
 				'cursor':'pointer'
 			};
-			return <button style={style}>{text}
+			return <button style={style} onClick={onClick} onMouseDown={onMouseDown}>
+				{text}
 			</button>;
 		};
 		//----------------------- component Slider ----------------------//
@@ -112,11 +120,16 @@
 			const rangeStyle={
 				'cursor':'pointer'
 			};
+			/*simulate triggering event*/
+			const b1= e=>onChange({target:{value:value-1}});
+			const b2= e=>onChange({target:{value:value+1}});
+			
 			return <div style={style}>
 				<div style={valueStyle}>{text}</div>
-				<Button text={'-'}/>
+
+				<Button text={'-'} onClick={b1}/>
 				<input style={rangeStyle} type='range' min={min} max={max} onInput={onChange} value={value}/>
-				<Button text={'+'}/>
+				<Button text={'+'} onClick={b2}/>
 			</div>;
 		};
 
