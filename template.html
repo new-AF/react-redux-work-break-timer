@@ -174,12 +174,41 @@
 		};
 		//----------------------- component Timer ----------------------//
 		const Timer=props=>{
-			const {text,sentStyle}=props;
+			const {text,sentStyle,value,startPauseId,resetId,titleId,timeId}=props;
 			const style={
+				display:'grid',
+				'grid-template-columns':'repeat(3,1fr)',
+				'grid-template-rows':'repeat(2,auto)',
+				border:'0.2rem solid black',
+				'border-radius':'0.25rem',
 				...sentStyle
 			};
+			const titleStyle={
+				'grid-column':'1/4',
+				'font-size':'3rem'
+			};
+			const timeStyle={
+				'grid-column':'1/4',
+				'font-size':'3rem',
+				'text-align':'center'
+			};
+
+			const buttonStyle={
+				'font-size':'1rem',
+				padding:'0.5rem 0.8rem',
+				'cursor':'pointer'
+				
+			};
+
 			return <div style={style}>
-				<div>Timer</div>
+				<div id={titleId} style={titleStyle}>Session</div>
+				<div id={timeId} style={timeStyle}>25:00</div>
+				<div id={startPauseId}>
+					<button style={buttonStyle} className="fa-solid fa-play"></button>
+					<button style={buttonStyle} className="fa-solid fa-pause"></button>
+				</div>
+				<button id={resetId} style={buttonStyle} className="fa-solid fa-rotate-left"></button>
+				
 			</div>;
 		};
 
@@ -227,7 +256,7 @@
 				const slider2Things={
 					value:			slider2.value,
 					min:			1,
-					max:			90,
+					max:			60,
 					defaultValue:	25,
 					onChange:		props['do-range2-onchange']
 				};
@@ -241,7 +270,7 @@
 					
 					<SessionLength plusId="break-decrement" minusId="session-decrement" innerId="session-label" text="Session Length" slider={slider2Things} timeValueId="session-length"/>
 					
-					<Timer sentStyle={timerStyle}/>
+					<Timer sentStyle={timerStyle} startPauseId="start_stop" resetId="reset" titleId="timer-label" timeId="session-length"/>
 					
 					<footer style={headerFooterStyle}><p>by Abdullah Fatota</p></footer>
 				</div>);
