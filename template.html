@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>
+		
+	</title>
+	<script src="./libraries/babel.min.js"></script>
+	<script src="./libraries/react.development.js"></script>
+	<script src="./libraries/react-dom.development.js"></script>
+	
+	<!-- redux https://unpkg.com/redux@4.2.0/dist/redux.js -->
+	<script src="./libraries/redux.js"></script>
+	
+	<!-- react-redux https://cdnjs.cloudflare.com/ajax/libs/react-redux/8.0.5/react-redux.js -->
+	<script src="./libraries/react-redux.js"></script>
+	
+	<!-- font awesome icons -->
+	<link href='./libraries/css/all.css' rel='stylesheet'>
+	
+	<style>
+		body{
+			margin: 0;
+		}
+		*{
+			outline:1px solid black;
+			font-family: "Consolas","Lucida Console", monospace, "Tahoma", sans-serif;
+			color: black
+		}
+	</style>
+</head>
+  
+<body>
+	<main>
+		<div id="react-container-1" class="react-container">
+		
+		<div>
+	</main>
+	
+	<script type="text/babel">
+
+		
+		//----------------------- reducer ----------------------//
+		const reducer=(state={}, action)=>{
+			return state;
+		}
+		
+		//----------------------- map state to props ----------------------//
+		const mapStateToProps= state=>state;
+
+		//----------------------- map dispatch to props ----------------------//
+		const mapDispatchToProps= dispatchFunction=>({
+
+		});
+		//----------------------- react component Provider ----------------------//
+		const Provider = ReactRedux.Provider;
+		//----------------------- connect function ----------------------//
+		const connect= ReactRedux.connect;
+		//----------------------- store i.e. STATE object ----------------------//
+		const store= Redux.createStore(reducer);
+		//----------------------- component Slider ----------------------//
+		const Slider=props=>{
+			const {text,min,max}=props;
+			const style={
+			
+			};
+			return <div style={style}>
+				<div>{min}</div>
+				<button>-</button>
+				<input type='range' min={min} max={max}/>
+				<button>+</button>
+			</div>;
+		};
+		//----------------------- component SessionLength ----------------------//
+		const SessionLength=props=>{
+			const {text}=props;
+			const style={
+			
+			};
+			return <div style={style}>
+				<div>{text}</div>
+				<Slider min={1} max={'none'}/>
+			</div>;
+		};
+		//----------------------- component Timer ----------------------//
+		const Timer=props=>{
+			const {text,sentStyle}=props;
+			const style={
+				...sentStyle
+			};
+			return <div style={style}>
+				<div>Timer</div>
+			</div>;
+		};
+
+		//----------------------- component App WITHOUT LOCAL STATE ----------------------//
+		class App extends React.Component{
+			constructor(props){
+				super(props);
+		
+			}
+
+			render(){
+				const style= {
+					'display':'grid',
+					'grid-template-columns':'0.5fr 0.5fr',
+					'grid-template-rows':'0.5fr 1fr 1fr 0.5fr',
+					/**/
+					'align-items':'center',
+					'justify-items':'center',
+					/**/
+					'background-color': 'wheat',
+					'min-height': '100vh',
+				};
+				const headerFooterStyle={
+					'font-weight':'bold',
+					'grid-column':'1/3'
+				};
+				const timerStyle={
+					'grid-column':'1/3',
+					'grid-row':'3'
+				};
+				return (
+				<div style={style}>
+					
+					<h1 style={headerFooterStyle}>React Redux Work/Break Timer</h1>
+					
+					<SessionLength text="Break Length"/>
+					<SessionLength text="Session Length"/>
+					<Timer sentStyle={timerStyle}/>
+					
+					<footer style={headerFooterStyle}><p>by Abdullah Fatota</p></footer>
+				</div>);
+			}
+		}
+		//----------------------- APP2 component ----------------------//
+		const App2= connect(mapStateToProps, mapDispatchToProps)(App);
+		
+		//----------------------- react componentAppWrapper ----------------------//
+		class AppWrapper extends React.Component{
+			constructor(props){
+				super(props);		
+			}
+			render(){
+				//store prop IS REQUIRED.
+				return (<Provider store={store}>
+					<App2/>
+				</Provider>);
+			}
+		}
+		//----------------------- put component AppWrapper in DOM ----------------------//
+
+		const container=document.querySelector('#react-container-1');
+		ReactDOM.render(<AppWrapper/>,container);
+
+	</script>
+	
+	<script src="./libraries/test bundle.js"></script>
+
+	
+</body>
+
+</html>
