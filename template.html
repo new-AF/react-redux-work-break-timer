@@ -40,20 +40,31 @@
 	
 	<script type="text/babel">
 
-		
 		//----------------------- state0 Slider reducer ----------------------//
 		const slider1State0={
-			value:''
+			value:			'',
+			min:			1,
+			max:			720,/*10hours*/
+			defaultValue:	5
 		};
 		const slider2State0={
-			value:''
+			value:			'',
+			min:			1,
+			max:			60,
+			defaultValue:	25
 		};
-
+		const timerState0={
+			current:	'work'
+		};
 		//----------------------- Slider reducer ----------------------//
 		const slider1Reducer=(state={...slider1State0}, action)=>{
 			const newState={...state};
 			const {value,type}=action;
-			if(type==='range1-onchange'){
+			
+			if(type==='range1-set'){
+				newState['value']=value;
+			}
+			else if(type==='range1-onchange'){
 				newState['value']=value;
 			}
 			return newState;
@@ -61,17 +72,26 @@
 		const slider2Reducer=(state={...slider2State0}, action)=>{
 			const newState={...state};
 			const {value,type}=action;
-			if(type==='range2-onchange'){
+			
+			if(type==='range2-set'){
+				newState['value']=value;
+			}
+			else if(type==='range2-onchange'){
 				newState['value']=value;
 			}
 			return newState;
 		}
-		
+		const timerReducer=(state={...timerReducer})=>{
+			return state;
+		};
 		//----------------------- map state to props ----------------------//
 		const mapStateToProps= state=>state;
 
 		//----------------------- map dispatch to props ----------------------//
 		const mapDispatchToProps= dispatchFunction=>({
+			'do-range1-set':value=>dispatchFunction({type:'range1-set',value:value}),
+			'do-range2-set':value=>dispatchFunction({type:'range2-set',value:value}),
+			/*---*/
 			'do-range1-onchange':event=>dispatchFunction({type:'range1-onchange',value:event.target.value}),
 			'do-range2-onchange':event=>dispatchFunction({type:'range2-onchange',value:event.target.value}),
 			/*---*/			
@@ -89,7 +109,8 @@
 		//----------------------- store i.e. STATE object ----------------------//
 		const store= Redux.createStore(Redux.combineReducers({
 			slider1:		slider1Reducer,
-			slider2:		slider2Reducer
+			slider2:		slider2Reducer,
+			timer:			timerReducer
 		}));
 		//----------------------- component Button ----------------------//
 		const Button=props=>{
@@ -174,7 +195,7 @@
 		};
 		//----------------------- component Timer ----------------------//
 		const Timer=props=>{
-			const {text,sentStyle,value,startPauseId,resetId,titleId,timeId}=props;
+			const {text,value,sentStyle,startPauseId,resetId,titleId,timeId,playPauseOnClick}=props;
 			const style={
 				display:'grid',
 				'grid-template-columns':'repeat(3,1fr)',
@@ -199,14 +220,14 @@
 				'cursor':'pointer'
 				
 			};
-
+			const playPauseStyle={
+				'grid-column':'1/3'
+			};
 			return <div style={style}>
 				<div id={titleId} style={titleStyle}>Session</div>
-				<div id={timeId} style={timeStyle}>25:00</div>
-				<div id={startPauseId}>
-					<button style={buttonStyle} className="fa-solid fa-play"></button>
-					<button style={buttonStyle} className="fa-solid fa-pause"></button>
-				</div>
+				<div id={timeId} style={timeStyle}>{value}</div>
+				<button style={{...buttonStyle,...playPauseStyle}} className="fa-solid fa-play"></button>
+				{/*<button style={buttonStyle} className="fa-solid fa-pause"></button>*/}
 				<button id={resetId} style={buttonStyle} className="fa-solid fa-rotate-left"></button>
 				
 			</div>;
@@ -216,7 +237,6 @@
 		class App extends React.Component{
 			constructor(props){
 				super(props);
-		
 			}
 
 			render(){
@@ -245,35 +265,41 @@
 				
 				/* break state */
 				const slider1Things={
-					value:			slider1.value,
-					min:			1,
-					max:			720,/*10hours*/
-					defaultValue:	5,
-					onChange:		props['do-range1-onchange']
+					onChange:		props['do-range1-onchange'],
+					...slider1
 				};
 				
 				/* work state */
 				const slider2Things={
-					value:			slider2.value,
-					min:			1,
-					max:			60,
-					defaultValue:	25,
-					onChange:		props['do-range2-onchange']
+					onChange:		props['do-range2-onchange'],
+					...slider2
 				};
+
+				const slider1Style={
 				
+				};
+				const slider2Style={
+				
+				};
+
 				return (
 				<div style={style}>
 					
 					<h1 style={headerFooterStyle}>React Redux Work/Break Timer</h1>
 					
-					<SessionLength plusId="break-increment" minusId="session-increment" innerId="break-label" text="Break Length" slider={slider1Things} timeValueId="break-length"/>
+					<SessionLength plusId="break-increment" minusId="session-increment" innerId="break-label" text="Break Length" slider={slider1Things} timeValueId="break-length" sentStyle={slider1Style}/>
 					
-					<SessionLength plusId="break-decrement" minusId="session-decrement" innerId="session-label" text="Session Length" slider={slider2Things} timeValueId="session-length"/>
+					<SessionLength plusId="break-decrement" minusId="session-decrement" innerId="session-label" text="Session Length" slider={slider2Things} timeValueId="session-length" sentStyle={slider2Style}/>
 					
-					<Timer sentStyle={timerStyle} startPauseId="start_stop" resetId="reset" titleId="timer-label" timeId="session-length"/>
+					<Timer value={props.timer.current==='current' ? slider2Things.value : slider1Things.value} sentStyle={timerStyle} startPauseId="start_stop" resetId="reset" titleId="timer-label" timeId="session-length"/>
 					
 					<footer style={headerFooterStyle}><p>by Abdullah Fatota</p></footer>
 				</div>);
+			}
+			componentDidMount(){
+				const props=this.props;
+				props['do-range1-set'](props.slider1.defaultValue);
+				props['do-range2-set'](props.slider2.defaultValue);
 			}
 		}
 		//----------------------- APP2 component ----------------------//
