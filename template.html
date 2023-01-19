@@ -40,48 +40,68 @@
 	
 	<script type="text/babel">
 
+		//----------------------- global objects ----------------------//
+		const newDate= (hours=0, minutes=0, seconds=0)=>{
+			
+			const obj=new Date(0);
+			
+			obj.setHours(hours,minutes,seconds,0);
+			return obj;
+		};
 		//----------------------- state0 Slider reducer ----------------------//
-		const slider1State0={
-			value:			'',
+		const breakSliderState0={
+			minutes:		'',
 			min:			1,
 			max:			720,/*10hours*/
-			defaultValue:	5
+			defaultMinutes:	5
 		};
-		const slider2State0={
-			value:			'',
+		const workSliderState0={
+			minutes:		'',
 			min:			1,
 			max:			60,
-			defaultValue:	25
+			defaultMinutes:	25
 		};
 		const timerState0={
-			current:	'work'
+			mode:	'session'/*i.e. 'session' or 'break'*/,
+			/*show string hh:mm:ss*/
+			showHours:	'',
+			showMinutes:	'',
+			showSeconds:	'',
+			
+			'date-obj':	newDate()
 		};
 		//----------------------- Slider reducer ----------------------//
-		const slider1Reducer=(state={...slider1State0}, action)=>{
+		const breakReducer=(state={...breakSliderState0}, action)=>{
 			const newState={...state};
-			const {value,type}=action;
+			const {minutes,type}=action;
 			
-			if(type==='range1-set'){
-				newState['value']=value;
+			/*SET ONCE*/
+			if(type==='break-range-set-minutes-once'){
+				newState['minutes']=minutes;
 			}
-			else if(type==='range1-onchange'){
-				newState['value']=value;
+			/*range EVENT*/
+			else if(type==='break-range-onchange-minutes'){
+				newState['minutes']=minutes;
 			}
 			return newState;
 		}
-		const slider2Reducer=(state={...slider2State0}, action)=>{
+		const workReducer=(state={...workSliderState0}, action)=>{
 			const newState={...state};
-			const {value,type}=action;
+			const {type,minutes}=action;
 			
-			if(type==='range2-set'){
-				newState['value']=value;
+			/*SET ONCE*/
+			if(type==='work-range-set-minutes-once'){
+				newState['minutes']=minutes;
 			}
-			else if(type==='range2-onchange'){
-				newState['value']=value;
+			/*range EVENT*/
+			else if(type==='work-range-onchange-minutes'){
+				newState['minutes']=minutes;
 			}
 			return newState;
 		}
-		const timerReducer=(state={...timerReducer})=>{
+		const timerReducer=(state={...timerState0},action)=>{
+
+			
 			return state;
 		};
 		//----------------------- map state to props ----------------------//
@@ -89,17 +109,30 @@
 
 		//----------------------- map dispatch to props ----------------------//
 		const mapDispatchToProps= dispatchFunction=>({
-			'do-range1-set':value=>dispatchFunction({type:'range1-set',value:value}),
-			'do-range2-set':value=>dispatchFunction({type:'range2-set',value:value}),
-			/*---*/
-			'do-range1-onchange':event=>dispatchFunction({type:'range1-onchange',value:event.target.value}),
-			'do-range2-onchange':event=>dispatchFunction({type:'range2-onchange',value:event.target.value}),
-			/*---*/			
-			'do-range1-minus':event=>dispatchFunction({type:'range1-minus',value:event.target.value}),
-			'do-range1-plus':event=>dispatchFunction({type:'range1-plus',value:event.target.value}),
-			/**/
-			'do-range2-minus':event=>dispatchFunction({type:'range2-minus',value:event.target.value}),
-			'do-range2-plus':event=>dispatchFunction({type:'range2-plus',value:event.target.value}),
+			
+			/*--ONCE range 1 & 2 set minutes--*/
+			'do-break-range-set-minutes-once':minutes=>dispatchFunction({
+				type:'break-range-set-minutes-once',
+				minutes:minutes
+			}),
+			
+			'do-work-range-set-minutes-once':minutes=>dispatchFunction({
+				type:'work-range-set-minutes-once',
+				minutes:minutes
+			}),
+			
+			
+			/*--EVENT; range 1 & 2 onChange; set minutes--*/
+			'do-break-range-onchange-minutes-event':event=>dispatchFunction({
+				type:'break-range-onchange-minutes',
+				minutes:event.target.valueAsNumber
+			}),
+			
+			'do-work-range-onchange-minutes-event':event=>dispatchFunction({
+				type:'work-range-onchange-minutes',
+				minutes:event.target.valueAsNumber
+			}),
+			
 
 		});
 		//----------------------- react component Provider ----------------------//
@@ -108,8 +141,8 @@
 		const connect= ReactRedux.connect;
 		//----------------------- store i.e. STATE object ----------------------//
 		const store= Redux.createStore(Redux.combineReducers({
-			slider1:		slider1Reducer,
-			slider2:		slider2Reducer,
+			breakState:		breakReducer,
+			workState:		workReducer,
 			timer:			timerReducer
 		}));
 		//----------------------- component Button ----------------------//
@@ -125,51 +158,69 @@
 				{text}
 			</button>;
 		};
+		//----------------------- component Range ----------------------//
+		const Range= props=>{
+			const {sentStyle,min,max,value,onChange}=props;
+			
+			const style={
+				...sentStyle
+			};
+			return <input style={style} type='range' min={min} max={max} onInput={onChange} value={value}/>;
+		};
 		//----------------------- component Slider ----------------------//
 		const Slider=props=>{
 	
-			const {min,max,value:value0,onChange,defaultValue,plusId,minusId,valueId}=props;
+			const {min,max,minutes,defaultMinutes,onChange,plusId,minusId,valueId}=props;
 			
-			/*values0 is from state; and on first run it is '';*/
-			const value= value0==='' ? defaultValue : value0;
-			const text= value<60 ? `${value} minute(s)` : `${Math.floor(value/60)} hour(s), ${value%60} minutes`;
+			const text= minutes<60 ? `${minutes} minute(s)` : `${Math.floor(minutes/60)} hour(s), ${minutes%60} minutes`;
 			
 			const style={
 				'display':'grid',
+				'grid-gap':'0.5rem',
 				border:'0.2rem solid black',
-				'border-radius':'0.25rem'
+				'border-radius':'0.25rem',
+				'padding':'0.5rem'
 			};
-			/* FOR Testing purposes; value must an element by itself */
+			
+			/*HIDDEN; FOR Testing purposes; value must an element by itself */
 			const valueStyle={
-				'color':'transparent',
-				'grid-column':'1/4',
+				/*'color':'transparent',*/
+				'grid-column':'1',
 				'grid-row':'1',
 				'text-align':'center'
 			};
-
+			
+			/*SHOWN;*/
 			const afterValueStyle={
-				'grid-column':'1/4',
+				'grid-column':'2/4',
 				'grid-row':'1',
 				'text-align':'center'
 			};
 	
 			const rangeStyle={
-				'cursor':'pointer'
+				'cursor':'pointer',
 			};
 			const buttonStyle={
 				
 			};
 			
 			/*simulate triggering event*/
-			const b1= e=>onChange({target:{value: value>min && value<=max ? value-1 : value }});
-			const b2= e=>onChange({target:{value: value>=min && value<max ? value+1 : value }});
+			const b1= e=>onChange({target:{valueAsNumber: minutes>min && minutes<=max ? minutes-1 : minutes }});
+			const b2= e=>onChange({target:{valueAsNumber: minutes>=min && minutes<max ? minutes+1 : minutes }});
 			
 			return <div style={style}>
-				<div id={valueId} style={valueStyle}>{value}</div>
-				<div style={afterValueStyle}>{text}</div>
+				<div id={valueId} style={valueStyle}>
+					{minutes}
+				</div>
+				
+				<div style={afterValueStyle}>
+					{text}
+				</div>
 
 				<Button id={plusId} sentStyle={buttonStyle} text={'-'} onClick={b1}/>
-				<input style={rangeStyle} type='range' min={min} max={max} onInput={onChange} value={value}/>
+				
+				<Range value={minutes} min={min} max={max} onChange={onChange}/>
+				
 				<Button id={minusId} sentStyle={buttonStyle} text={'+'} onClick={b2}/>
 			</div>;
 		};
@@ -177,7 +228,7 @@
 		//----------------------- component SessionLength ----------------------//
 		const SessionLength=props=>{
 			const {text,slider,innerId,plusId,minusId,timeValueId}=props;
-			const {min,max,value,defaultValue,onChange}=slider;
+			const {min,max,minutes,defaultMinutes,onChange}=slider;
 			const style={
 			
 			};
@@ -190,14 +241,19 @@
 
 			return <div style={style}>
 				<div style={textStyle} id={innerId}>{text}</div>
-				<Slider min={min} max={max} onChange={onChange} value={value} defaultValue={defaultValue} plusId={plusId} minusId={minusId} valueId={timeValueId}/>
+				<Slider min={min} max={max} onChange={onChange} minutes={minutes} defaultMinutes={defaultMinutes} plusId={plusId} minusId={minusId} valueId={timeValueId}/>
 			</div>;
 		};
 		//----------------------- component Timer ----------------------//
 		const Timer=props=>{
-			const {text,value,sentStyle,startPauseId,resetId,titleId,timeId,playPauseOnClick}=props;
+			//value; is Date object
+			const {showHours,showMinutes,showSeconds,mode,sentStyle,startPauseId,resetId,titleId,timeId,playPauseOnClick}=props;
+
+			
 			const style={
 				display:'grid',
+				'grid-gap':'0.5rem',
+				'padding':'0.5rem',
 				'grid-template-columns':'repeat(3,1fr)',
 				'grid-template-rows':'repeat(2,auto)',
 				border:'0.2rem solid black',
@@ -224,8 +280,10 @@
 				'grid-column':'1/3'
 			};
 			return <div style={style}>
-				<div id={titleId} style={titleStyle}>Session</div>
-				<div id={timeId} style={timeStyle}>{value}</div>
+				<div id={titleId} style={titleStyle}>{mode}</div>
+				<div id={timeId} style={timeStyle}>
+					{`${showHours}:${showMinutes}:${showSeconds}`}
+				</div>
 				<button style={{...buttonStyle,...playPauseStyle}} className="fa-solid fa-play"></button>
 				{/*<button style={buttonStyle} className="fa-solid fa-pause"></button>*/}
 				<button id={resetId} style={buttonStyle} className="fa-solid fa-rotate-left"></button>
@@ -261,45 +319,46 @@
 				};
 				const props=this.props;
 				
-				const {slider1,slider2}=props;
+				const {breakState,workState,timer}=props;
+				const {'date-obj':dateobj}=timer;
 				
 				/* break state */
-				const slider1Things={
-					onChange:		props['do-range1-onchange'],
-					...slider1
+				const breakObject={
+					onChange:		props['do-break-range-onchange-minutes-event'],
+					...breakState
 				};
 				
 				/* work state */
-				const slider2Things={
-					onChange:		props['do-range2-onchange'],
-					...slider2
+				const workObject={
+					onChange:		props['do-work-range-onchange-minutes-event'],
+					...workState
 				};
 
-				const slider1Style={
+				const breakSliderStyle={
 				
 				};
-				const slider2Style={
+				const workSliderStyle={
 				
 				};
 
 				return (
 				<div style={style}>
 					
-					<h1 style={headerFooterStyle}>React Redux Work/Break Timer</h1>
+					<h1 style={headerFooterStyle}>React Redux Break/Work Timer</h1>
 					
-					<SessionLength plusId="break-increment" minusId="session-increment" innerId="break-label" text="Break Length" slider={slider1Things} timeValueId="break-length" sentStyle={slider1Style}/>
+					<SessionLength text="Break Length" plusId="break-increment" minusId="session-increment" innerId="break-label" slider={breakObject} timeValueId="break-length" sentStyle={breakSliderStyle}/>
 					
-					<SessionLength plusId="break-decrement" minusId="session-decrement" innerId="session-label" text="Session Length" slider={slider2Things} timeValueId="session-length" sentStyle={slider2Style}/>
+					<SessionLength text="Session Length" plusId="break-decrement" minusId="session-decrement" innerId="session-label" slider={workObject} timeValueId="session-length" sentStyle={workSliderStyle}/>
 					
-					<Timer value={props.timer.current==='current' ? slider2Things.value : slider1Things.value} sentStyle={timerStyle} startPauseId="start_stop" resetId="reset" titleId="timer-label" timeId="session-length"/>
+					<Timer value={dateobj===undefined ? new Date(0) : dateobj} sentStyle={timerStyle} startPauseId="start_stop" resetId="reset" titleId="timer-label" timeId="session-length"/>
 					
 					<footer style={headerFooterStyle}><p>by Abdullah Fatota</p></footer>
 				</div>);
 			}
 			componentDidMount(){
 				const props=this.props;
-				props['do-range1-set'](props.slider1.defaultValue);
-				props['do-range2-set'](props.slider2.defaultValue);
+				props['do-break-range-set-minutes-once'](props.breakState.defaultMinutes);
+				props['do-work-range-set-minutes-once'](props.workState.defaultMinutes);
 			}
 		}
 		//----------------------- APP2 component ----------------------//
