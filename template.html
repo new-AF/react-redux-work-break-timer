@@ -82,7 +82,7 @@
 			
 			return hours>=1 ? `${hours} hour(s), ${minutes} minute(s)` : `${minutes} minute(s)`;
 		};
-		//----------------------- state0 Slider reducer ----------------------//
+		//----------------------- break state ----------------------//
 		const breakSliderState0={
 			/*total minutes; can be >=60*/
 			minutes:		'',
@@ -91,6 +91,7 @@
 			max:			720,/*10hours*/
 			defaultMinutes:	5
 		};
+		//----------------------- work state ----------------------//
 		const workSliderState0={
 			/*total minutes; can be >=60*/
 			minutes:		'',
@@ -99,13 +100,18 @@
 			max:			60,
 			defaultMinutes:	25
 		};
+		//----------------------- timer state ----------------------//
 		const timerState0={
 			mode:			'session'/*i.e. 'session' or 'break'*/,
 			setTimeoutId:	'',
-			paused:			false,
-			'date-obj':		newDate()
+			playing:		'',
+			'play-icon':	'fa-solid fa-play',
+			'pause-icon':	'fa-solid fa-pause',
+			'button-icon':	'',
+			dateObj:		newDate()
 		};
-		//----------------------- Slider reducer ----------------------//
+		timerState0['button-icon']=timerState0['play-icon']
+		//----------------------- break reducer ----------------------//
 		const breakReducer=(state={...breakSliderState0}, action)=>{
 			const newState={...state};
 			const {minutes,type}=action;
@@ -120,6 +126,7 @@
 			}
 			return newState;
 		}
+		//----------------------- work reducer ----------------------//
 		const workReducer=(state={...workSliderState0}, action)=>{
 			const newState={...state};
 			const {type,minutes}=action;
@@ -134,41 +141,61 @@
 			}
 			return newState;
 		}
+		//----------------------- timer reducer ----------------------//
 		const timerReducer=(state={...timerState0},action)=>{
 
 			const newState={...state};
-			const {type}=action;
+			const {type,func,ms}=action;
 	
-			const {'date-obj':date, paused}=newState;
+			const {'dateObj':date, playing, setTimeoutId}=newState;
+			const [hh, mm, ss]=[date.getHours(), date.getMinutes(), date.getSeconds()];
 			
-			
-			if(type==='play-pause' && paused===false){
+			if(type==='play-pause'){
 				//console.log('play-pause');
-	
+				//start initially
+				if(playing===''){
+					newState['playing']=true;
+					newState['setTimeoutId']=setInterval(func,ms);
+					newState['button-icon']=newState['pause-icon'];
+					
+				}
+				//pause
+				else if(playing===true){
+					newState['playing']=false;
+					clearInterval(setTimeoutId);
+					newState['button-icon']=newState['play-icon'];
+					
+				}
+				//start again
+				else{
+					newState['playing']=true;
+					newState['setTimeoutId']=setInterval(func,ms);
+					newState['button-icon']=newState['pause-icon'];
+				}
 
 			}
-			else if(type==='set-date-obj-event'){
+			else if(type==='set-dateObj-event'){
 				const {totalMinutes}= action;
 				/*reset first*/
 				date.setHours(0);
 				
 				date.setMinutes(totalMinutes);
 			}
-			else if(type==='set-date-obj-decrement'){
-				const s= date.getSeconds()-1;
-				date.setSeconds(s);
-				console.log('set-date-obj-decrement');
-			}
-			else if(type==='set-setTimeoutId'){
-				
-				const {func,ms}=action;
-				const {setTimeoutId:id0}=newState;
-				//console.log(newState,action);
-				if(id0!==''){
-					clearInterval(id0);
+			else if(type==='set-dateObj-decrement'){
+				//reached end
+				if(hh===0 && mm===0 && ss===0){
+					newState['playing']='';
+					clearInterval(setTimeoutId);
+					newState['button-icon']=newState['play-icon'];
 				}
-				newState['setTimeoutId']=setInterval(func,ms);
+				//decrement seconds
+				else{
+					const s= date.getSeconds()-1;
+					date.setSeconds(s);				
+				}
 
+				//console.log('set-dateObj-decrement');
+				
 			}
 			
 			return newState;
@@ -202,17 +229,19 @@
 				minutes:event.target.valueAsNumber
 			}),
 			
-			'do-play-pause':event=>dispatchFunction({
-				type:'play-pause'
+			'do-play-pause':(event,func,ms)=>dispatchFunction({
+				type:'play-pause',
+				func:func,
+				ms:ms
 			}),
 			
 			'do-set-obj-event':event=>dispatchFunction({
-				type:'set-date-obj-event',
+				type:'set-dateObj-event',
 				totalMinutes:event.target.valueAsNumber
 			}),
 			
 			'do-set-obj-decrement':()=>dispatchFunction({
-				type:'set-date-obj-decrement'
+				type:'set-dateObj-decrement'
 			}),
 			
 			'do-set-setTimeoutId':(func,ms)=>dispatchFunction({
@@ -337,9 +366,8 @@
 		//----------------------- component Timer ----------------------//
 		const Timer=props=>{
 			//value; is Date object
-			const {date,totalMinutes,convertTotalMinutes,onPlayPause,mode,sentStyle,startPauseId,resetId,titleId,timeId,playPauseOnClick,paused}=props;
+			const {date,totalMinutes,convertTotalMinutes,onPlayPause,mode,sentStyle,startPauseId,resetId,titleId,timeId,playPauseOnClick,buttonIcon}=props;
 			
-			//const {hours,minutes,seconds}=convertTotalMinutes(totalMinutes,true);
 			const [hours,minutes,seconds]=[date.getHours(), date.getMinutes(), date.getSeconds()];
 			const [hh,mm,ss]= [`${hours<10 ? '0' : ''}${hours}`,
 				`${minutes<10 ? '0' : ''}${minutes}`,
@@ -412,8 +440,7 @@
 				
 				
 				
-				<Button onClick={onPlayPause} sentStyle={{...buttonStyle,...playPauseStyle}} className={paused ? "fa-solid fa-pause" : "fa-solid fa-play"} />
-				{/*<button style={buttonStyle} className=></button>*/}
+				<Button onClick={onPlayPause} sentStyle={{...buttonStyle,...playPauseStyle}} className={buttonIcon} />
 				
 				<Button id={resetId} sentStyle={{...buttonStyle,...resetStyle}} className="fa-solid fa-rotate-left"/>
 
@@ -449,7 +476,7 @@
 				const props=this.props;
 				
 				const {breakState,workState,timerState}=props;
-				const {'date-obj':dateobj}=timerState;
+				const {'dateObj':dateobj}=timerState;
 				
 				/* break state */
 				const breakObject={
@@ -485,7 +512,20 @@
 					
 					<SessionLength text="Session Length" plusId="break-decrement" minusId="session-decrement" innerId="session-label" slider={workObject} timeValueId="session-length" sentStyle={workSliderStyle} formatTotalMinutes={formatTotalMinutes}/>
 					
-					<Timer date={timerState['date-obj']} totalMinutes={workObject.minutes} convertTotalMinutes={convertTotalMinutes} onPlayPause={e=>props['do-set-setTimeoutId'](props['do-set-obj-decrement'],1000)}  paused={timerState['paused']} sentStyle={timerStyle} startPauseId="start_stop" resetId="reset" titleId="timer-label" timeId="session-length"/>
+					<Timer
+					date={timerState['dateObj']}
+					totalMinutes={workObject.minutes}
+					convertTotalMinutes={convertTotalMinutes}
+					onPlayPause={e=>{					
+							props['do-play-pause'](e,props['do-set-obj-decrement'],1000);
+						}
+					}
+					buttonIcon={timerState['button-icon']}
+					sentStyle={timerStyle}
+					startPauseId="start_stop"
+					resetId="reset"
+					titleId="timer-label"
+					timeId="session-length"/>
 					
 					<footer style={headerFooterStyle}><p>by Abdullah Fatota</p></footer>
 				</div>);
