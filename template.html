@@ -41,11 +41,11 @@
 	<script type="text/babel">
 
 		//----------------------- global objects ----------------------//
-		const newDate= (hours=0, minutes=0, seconds=0)=>{
+		const newDate= (totalMinutes=0)=>{
 			
 			const obj=new Date(0);
 			
-			obj.setHours(hours,minutes,seconds,0);
+			obj.setMinutes(totalMinutes);
 			return obj;
 		};
 		
@@ -102,10 +102,9 @@
 		const timerState0={
 			mode:	'session'/*i.e. 'session' or 'break'*/,
 			/*show string hh:mm:ss*/
-			showHours:	'',
-			showMinutes:	'',
-			showSeconds:	'',
 			
+			setTimeoutId:'',
+			paused:false,
 			'date-obj':	newDate()
 		};
 		//----------------------- Slider reducer ----------------------//
@@ -139,8 +138,30 @@
 		}
 		const timerReducer=(state={...timerState0},action)=>{
 
+			const newState={...state};
+			const {type}=action;
+	
+			const {'date-obj':date, paused}=newState;
 			
-			return state;
+			
+			if(type==='play-pause' && paused===false){
+				//console.log('play-pause');
+				
+
+			}
+			else if(type==='set-date-obj-event'){
+				const {totalMinutes}= action;
+				/*reset first*/
+				date.setHours(0);
+				
+				date.setMinutes(totalMinutes);
+			}
+			else if(type==='set-date-obj-decrement'){
+				const s= date.getSeconds()-1;
+				date.setSeconds(s);
+			}
+			
+			return newState;
 		};
 		//----------------------- map state to props ----------------------//
 		const mapStateToProps= state=>state;
@@ -171,8 +192,27 @@
 				minutes:event.target.valueAsNumber
 			}),
 			
+			'do-play-pause':event=>dispatchFunction({
+				type:'play-pause'
+			}),
+			
+			'do-set-obj-event':event=>dispatchFunction({
+				type:'set-date-obj-event',
+				totalMinutes:event.target.valueAsNumber
+			}),
+			
+			'do-set-obj-decrement':event=>dispatchFunction({
+				type:'set-obj-decrement'
+			}),
+			
+			'do-set-setTimeoutId':theFunction=>dispatchFunction({
+				type:'set-setTimeoutId',
+				id:(()=>setTimeout(theFunction,1000))()
+			}),
+			
 
 		});
+		
 		//----------------------- react component Provider ----------------------//
 		const Provider = ReactRedux.Provider;
 		//----------------------- connect function ----------------------//
@@ -181,7 +221,7 @@
 		const store= Redux.createStore(Redux.combineReducers({
 			breakState:		breakReducer,
 			workState:		workReducer,
-			timer:			timerReducer
+			timerState:			timerReducer
 		}));
 		//----------------------- component Button ----------------------//
 		const Button=props=>{
@@ -279,21 +319,26 @@
 
 			return <div style={style}>
 				<div style={textStyle} id={innerId}>{text}</div>
+				
 				<Slider min={min} max={max} onChange={onChange} minutes={minutes} defaultMinutes={defaultMinutes} plusId={plusId} minusId={minusId} valueId={timeValueId} formatTotalMinutes={formatTotalMinutes}/>
 			</div>;
 		};
 		//----------------------- component Timer ----------------------//
 		const Timer=props=>{
 			//value; is Date object
-			const {totalMinutes,convertTotalMinutes,mode,sentStyle,startPauseId,resetId,titleId,timeId,playPauseOnClick}=props;
+			const {date,totalMinutes,convertTotalMinutes,onPlayPause,mode,sentStyle,startPauseId,resetId,titleId,timeId,playPauseOnClick,paused}=props;
 			
-			const {hours,minutes,seconds}=convertTotalMinutes(totalMinutes,true);
+			//const {hours,minutes,seconds}=convertTotalMinutes(totalMinutes,true);
+			const [hours,minutes,seconds]=[date.getHours(), date.getMinutes(), date.getSeconds()];
+			const [hh,mm,ss]= [`${hours<10 ? '0' : ''}${hours}`,
+				`${minutes<10 ? '0' : ''}${minutes}`,
+				'00', ];
 			
 			const style={
 				display:'grid',
 				'grid-gap':'0.5rem',
 				'padding':'0.5rem',
-				'grid-template-columns':'repeat(3,1fr)',
+				'grid-template-columns':'repeat(4,1fr)',
 				'grid-template-rows':'repeat(3,auto)',
 				border:'0.2rem solid black',
 				'border-radius':'0.25rem',
@@ -318,16 +363,23 @@
 				'font-size':'3rem',
 				'text-align':'center'
 			};
-
+			
+			const dateStyle={
+				'grid-column':'4',
+				'grid-row':'2',
+				'text-align':'center'
+			};
+			
 			const buttonStyle={
 				'font-size':'1rem',
 				padding:'0.5rem 0.8rem',
 				'cursor':'pointer'
-				
 			};
+
 			const playPauseStyle={
 				'grid-column':'1/3'
 			};
+
 			const resetStyle={
 				'grid-column':'3'
 			};
@@ -340,14 +392,20 @@
 				</div>
 				
 				<div style={visibleTimeStyle}>
-					{`${hours}:${minutes}:${seconds}`}
+					{`${hh}:${mm}:${ss}`}
 				</div>
 				
-				<Button sentStyle={{...buttonStyle,...playPauseStyle}} className="fa-solid fa-play"/>
-				{/*<button style={buttonStyle} className="fa-solid fa-pause"></button>*/}
+				<div style={dateStyle}>
+					{`${date}`}
+				</div>
+				
+				
+				
+				<Button onClick={onPlayPause} sentStyle={{...buttonStyle,...playPauseStyle}} className={paused ? "fa-solid fa-pause" : "fa-solid fa-play"} />
+				{/*<button style={buttonStyle} className=></button>*/}
 				
 				<Button id={resetId} sentStyle={{...buttonStyle,...resetStyle}} className="fa-solid fa-rotate-left"/>
-				
+
 			</div>;
 		};
 
@@ -379,18 +437,24 @@
 				};
 				const props=this.props;
 				
-				const {breakState,workState,timer}=props;
-				const {'date-obj':dateobj}=timer;
+				const {breakState,workState,timerState}=props;
+				const {'date-obj':dateobj}=timerState;
 				
 				/* break state */
 				const breakObject={
-					onChange:		props['do-break-range-onchange-minutes-event'],
+					onChange:		event=>{
+										props['do-break-range-onchange-minutes-event'](event),
+										props['do-set-obj-event'](event)
+									},
 					...breakState
 				};
 				
 				/* work state */
 				const workObject={
-					onChange:		props['do-work-range-onchange-minutes-event'],
+					onChange:		event=>{
+										props['do-work-range-onchange-minutes-event'](event),
+										props['do-set-obj-event'](event)
+									},
 					...workState
 				};
 
@@ -410,7 +474,7 @@
 					
 					<SessionLength text="Session Length" plusId="break-decrement" minusId="session-decrement" innerId="session-label" slider={workObject} timeValueId="session-length" sentStyle={workSliderStyle} formatTotalMinutes={formatTotalMinutes}/>
 					
-					<Timer totalMinutes={workObject.minutes} convertTotalMinutes={convertTotalMinutes} sentStyle={timerStyle} startPauseId="start_stop" resetId="reset" titleId="timer-label" timeId="session-length"/>
+					<Timer date={timerState['date-obj']} totalMinutes={workObject.minutes} convertTotalMinutes={convertTotalMinutes} onPlayPause={props['do-play-pause']}  paused={timerState['paused']} sentStyle={timerStyle} startPauseId="start_stop" resetId="reset" titleId="timer-label" timeId="session-length"/>
 					
 					<footer style={headerFooterStyle}><p>by Abdullah Fatota</p></footer>
 				</div>);
