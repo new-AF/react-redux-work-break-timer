@@ -107,7 +107,6 @@
 			title:			'',/*string*/
 			'work-title':	'Session',
 			'break-title':	'Break',
-			totalMinutes:	'',/*integer*/
 			'work-total-minutes':	'',/**integer/
 			'break-total-minutes':	'',/**integer/
 			setTimeoutId:	'',/*integer*/
@@ -168,12 +167,20 @@
 			}
 			else if(type==='break-total-minutes-set-once'){
 				const {totalMinutes}= action;
-				newState['break-total-minutes']=action.totalMinutes;
+				newState['break-total-minutes']=totalMinutes;
 				if(newState['switch-to-break']){
-					newState.totalMinutes= action.totalMinutes;
+					newState.totalMinutes= totalMinutes;
 					date.setHours(0);
 					date.setMinutes(totalMinutes);
 				}
+			}
+			else if(type==='work-total-minutes-set-event'){
+				const {totalMinutes}= action;
+				newState['work-total-minutes']=totalMinutes;
+			}
+			else if(type==='break-total-minutes-set-event'){
+				const {totalMinutes}= action;
+				newState['break-total-minutes']=totalMinutes;
 			}
 			else if(type==='play-pause'){
 				//console.log('play-pause');
@@ -207,17 +214,20 @@
 				date.setMinutes(totalMinutes);
 			}
 			else if(type==='set-dateObj-decrement'){
-				//reached end
+				//timer ended
 				if(hh===0 && mm===0 && ss===0){
-					newState['playing']='';
-					clearInterval(setTimeoutId);
-					newState['button-icon']=newState['play-icon'];
+					/*switch from Session <-> Break*/
+					newState['switch-to-break']= !newState['switch-to-break'];
+					date.setHours(0);
+					date.setSeconds(0);
+					date.setMinutes(newState['switch-to-break'] ? newState['break-total-minutes'] : newState['work-total-minutes'] );
+					
 				}
-				//decrement seconds
-				else{
-					const s= date.getSeconds()-1;
-					date.setSeconds(s);				
-				}
+
+				//decrement seconds	
+				const s= date.getSeconds()-1;
+				date.setSeconds(s);				
+	
 
 				//console.log('set-dateObj-decrement');
 				
@@ -284,6 +294,17 @@
 			'do-break-total-minutes-set-once':totalMinutes=>dispatchFunction({
 				type:'break-total-minutes-set-once',
 				totalMinutes:totalMinutes
+			}),
+			
+			'do-work-total-minutes-set-event':event=>dispatchFunction({
+				type:'work-total-minutes-set-event',
+				totalMinutes:event.target.valueAsNumber
+			}),
+			
+						
+			'do-break-total-minutes-set-event':event=>dispatchFunction({
+				type:'break-total-minutes-set-event',
+				totalMinutes:event.target.valueAsNumber
 			}),
 			
 			
@@ -559,7 +580,7 @@
 				const breakObject={
 					onChange:		event=>{
 										props['do-break-range-onchange-minutes-event'](event),
-										props['do-set-obj-event'](event)
+										props['do-break-total-minutes-set-event'](event)
 									},
 					...breakState
 				};
@@ -568,7 +589,7 @@
 				const workObject={
 					onChange:		event=>{
 										props['do-work-range-onchange-minutes-event'](event),
-										props['do-set-obj-event'](event)
+										props['do-work-total-minutes-set-event'](event)
 									},
 					...workState
 				};
