@@ -343,7 +343,7 @@
 			const [hours,minutes,seconds]=[date.getHours(), date.getMinutes(), date.getSeconds()];
 			const [hh,mm,ss]= [`${hours<10 ? '0' : ''}${hours}`,
 				`${minutes<10 ? '0' : ''}${minutes}`,
-				'00', ];
+				`${seconds<10 ? '0' : ''}${seconds}`, ];
 			
 			const style={
 				display:'grid',
