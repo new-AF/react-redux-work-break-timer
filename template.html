@@ -89,7 +89,7 @@
 			minutes:		'',/*integer*/
 
 			min:			1,
-			max:			720,/*10hours*/
+			max:			60,/*10hours*/
 			defaultMinutes:	1/*5*/
 		};
 		//----------------------- work state ----------------------//
@@ -339,6 +339,7 @@
 			const {sentStyle,min,max,value,onChange}=props;
 			
 			const style={
+				cursor:'pointer',
 				...sentStyle
 			};
 			return <input style={style} type='range' min={min} max={max} onInput={onChange} value={value}/>;
@@ -346,7 +347,7 @@
 		//----------------------- component Slider ----------------------//
 		const Slider=props=>{
 	
-			const {min,max,minutes,defaultMinutes,onChange,plusId,minusId,valueId,formatTotalMinutes}=props;
+			const {sentStyle,min,max,minutes,defaultMinutes,onChange,plusId,minusId,valueId,formatTotalMinutes}=props;
 			
 			const text= formatTotalMinutes(minutes);
 			
@@ -355,7 +356,8 @@
 				'grid-gap':'0.5rem',
 				border:'0.2rem solid black',
 				'border-radius':'0.25rem',
-				'padding':'0.5rem'
+				'padding':'0.5rem',
+				...sentStyle
 			};
 			
 			/*HIDDEN; FOR Testing purposes; value must an element by itself */
@@ -403,22 +405,42 @@
 
 		//----------------------- component SessionLength ----------------------//
 		const SessionLength=props=>{
-			const {sentStyle,text,slider,innerId,plusId,minusId,timeValueId,formatTotalMinutes}=props;
+			const {hideZindex,hideOpacity,sentStyle,text,slider,innerId,plusId,minusId,timeValueId,formatTotalMinutes}=props;
 			const {min,max,minutes,defaultMinutes,onChange}=slider;
 			const style={
+				display:'grid',
+				'grid-template-columns':'auto',
+				'grid-template-rows':'auto auto',
+				transition:'opacity 500ms',
+				opacity:hideOpacity,
 				...sentStyle
 			};
+			const disableStyle={
+				'grid-column':'1',
+				'grid-row':'1/3',
+				
+				'background-color':'transparent',
+				'z-index':hideZindex
+			};
 			const textStyle={
+				'grid-column':'1',
+				'grid-row':'1',
 				'text-align':'center',
 				'font-weight':'bold',
 				'font-size':'1.5rem',
 				'margin-bottom':'1rem'
 			};
-
+			const sliderStyle={
+				'grid-column':'1',
+				'grid-row':'2',
+			}
 			return <div style={style}>
+				<div style={disableStyle}></div>
+				
 				<div style={textStyle} id={innerId}>{text}</div>
 				
-				<Slider min={min} max={max} onChange={onChange} minutes={minutes} defaultMinutes={defaultMinutes} plusId={plusId} minusId={minusId} valueId={timeValueId} formatTotalMinutes={formatTotalMinutes}/>
+				<Slider sentStyle={sliderStyle} min={min} max={max} onChange={onChange} minutes={minutes} defaultMinutes={defaultMinutes} plusId={plusId} minusId={minusId} valueId={timeValueId} formatTotalMinutes={formatTotalMinutes}/>
+				
 			</div>;
 		};
 		//----------------------- component Timer ----------------------//
@@ -495,6 +517,7 @@
 						'grid-gap':'0.5rem',
 						'justify-items':'end',
 						'align-items':'center',
+						'transition':'grid-row 500ms',
 						...common1
 					}}>
 					
@@ -570,7 +593,7 @@
 				const props=this.props;
 				
 				const {breakState,workState,timerState}=props;
-				const {'dateObj':date}=timerState;
+				const {'dateObj':date,playing}=timerState;
 				
 				/* break state */
 				const breakObject={
@@ -609,11 +632,33 @@
 				return (
 				<div style={style}>
 					
-					<h1 style={headerStyle}>React Redux Break/Work Timer</h1>
+					<h1 style={headerStyle}>React Redux Work/Break Timer</h1>
 
-					<SessionLength text="Session Length" plusId="break-decrement" minusId="session-decrement" innerId="session-label" slider={workObject} timeValueId="session-length" sentStyle={workSliderStyle} formatTotalMinutes={formatTotalMinutes}/>
+					<SessionLength
+					text="Session Length"
+					plusId="break-decrement"
+					minusId="session-decrement"
+					innerId="session-label"
+					slider={workObject}
+					timeValueId="session-length"
+					sentStyle={workSliderStyle}
+					formatTotalMinutes={formatTotalMinutes}
+					hideOpacity={playing===false || playing==='' ? '1' : '0'}
+					hideZindex={playing===false || playing==='' ? '-1' : '99'}
+					/>
 					
-					<SessionLength text="Break Length" plusId="break-increment" minusId="session-increment" innerId="break-label" slider={breakObject} timeValueId="break-length" sentStyle={breakSliderStyle} formatTotalMinutes={formatTotalMinutes}/>
+					<SessionLength
+					text="Break Length"
+					plusId="break-increment"
+					minusId="session-increment"
+					innerId="break-label"
+					slider={breakObject}
+					timeValueId="break-length"
+					sentStyle={breakSliderStyle}
+					formatTotalMinutes={formatTotalMinutes}
+					hideOpacity={playing===false || playing==='' ? '1' : '0'}
+					hideZindex={playing===false || playing==='' ? '-1' : '99'}
+					/>
 
 					<Timer
 					date={date}
