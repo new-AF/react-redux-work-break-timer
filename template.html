@@ -103,18 +103,24 @@
 		};
 		//----------------------- timer state ----------------------//
 		const timerState0={
+			dateObj:		newDate(),
+			
+			//is timer in work or break mode?
 			'switch-to-break':false,
-			title:			'',/*string*/
+
 			'work-title':	'Session',
 			'break-title':	'Break',
+			
 			'work-total-minutes':	'',/**integer/
 			'break-total-minutes':	'',/**integer/
+			
 			setTimeoutId:	'',/*integer*/
 			playing:		'',/*true or false*/
+	
 			'play-icon':	'fa-solid fa-play',
 			'pause-icon':	'fa-solid fa-pause',
 			'button-icon':	'',/*string*/
-			dateObj:		newDate()
+
 		};
 		timerState0['button-icon']=timerState0['play-icon']
 		//----------------------- break reducer ----------------------//
@@ -156,42 +162,60 @@
 			const {'dateObj':date, playing, setTimeoutId}=newState;
 			const [hh, mm, ss]=[date.getHours(), date.getMinutes(), date.getSeconds()];
 			
+			//when app starts set 'work-total-minutes'
+			//and set date object 'dateObj'
+			//beacuse Session minutes are first
 			if(type==='work-total-minutes-set-once'){
 				const {totalMinutes}= action;
 				newState['work-total-minutes']=totalMinutes;
-				if(newState['switch-to-break']===false){
-					newState.totalMinutes= totalMinutes;
-					date.setHours(0);
-					date.setMinutes(totalMinutes);
-				}
+
+				date.setHours(0);
+				date.setMinutes(totalMinutes);
+			
 			}
+			//when app starts set 'break-total-minutes'
 			else if(type==='break-total-minutes-set-once'){
 				const {totalMinutes}= action;
 				newState['break-total-minutes']=totalMinutes;
-				if(newState['switch-to-break']){
-					newState.totalMinutes= totalMinutes;
-					date.setHours(0);
-					date.setMinutes(totalMinutes);
-				}
+
 			}
+			//when work slider changes set its value
+			//and set date if needed
 			else if(type==='work-total-minutes-set-event'){
 				const {totalMinutes}= action;
 				newState['work-total-minutes']=totalMinutes;
+				//if timer is initial or paused [should be hidden with opacity and z-index]
+				//and it is currently work
+				//then set 'dateObj'
+				if((playing===false || playing==='') && newState['switch-to-break']===false){
+				
+					date.setHours(0,totalMinutes,0);
+				}
 			}
+			//when break slider changes set its value
+			//and set date if needed
 			else if(type==='break-total-minutes-set-event'){
 				const {totalMinutes}= action;
 				newState['break-total-minutes']=totalMinutes;
+				
+				if(playing===false && newState['switch-to-break']===true){
+				
+					date.setHours(0,totalMinutes,0);
+				}
+				
 			}
+			//when play pause button is clicked
 			else if(type==='play-pause'){
 				//console.log('play-pause');
-				//start initially
+				
+				//if first time, initialize 'playing', call 'setInterval' set icon
 				if(playing===''){
 					newState['playing']=true;
 					newState['setTimeoutId']=setInterval(func,ms);
 					newState['button-icon']=newState['pause-icon'];
 					
 				}
-				//pause
+				//pause;
 				else if(playing===true){
 					newState['playing']=false;
 					clearInterval(setTimeoutId);
@@ -205,13 +229,6 @@
 					newState['button-icon']=newState['pause-icon'];
 				}
 
-			}
-			else if(type==='set-dateObj-event'){
-				const {totalMinutes}= action;
-				/*reset first*/
-				date.setHours(0);
-				
-				date.setMinutes(totalMinutes);
 			}
 			else if(type==='set-dateObj-decrement'){
 				//timer ended
@@ -268,11 +285,6 @@
 				type:'play-pause',
 				func:func,
 				ms:ms
-			}),
-			
-			'do-set-obj-event':event=>dispatchFunction({
-				type:'set-dateObj-event',
-				totalMinutes:event.target.valueAsNumber
 			}),
 			
 			'do-set-obj-decrement':()=>dispatchFunction({
