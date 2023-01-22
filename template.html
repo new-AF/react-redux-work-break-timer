@@ -41,11 +41,11 @@
 	<script type="text/babel">
 
 		//----------------------- global objects ----------------------//
-		const newDate= (totalMinutes=0)=>{
+		const newDate= (h=0,totalMinutes=0,s=0)=>{
 			
 			const obj=new Date(0);
 			
-			obj.setMinutes(totalMinutes);
+			obj.setHours(h, totalMinutes, s);
 			return obj;
 		};
 		
@@ -105,6 +105,11 @@
 		const timerState0={
 			dateObj:		newDate(),
 			
+			formatter:		new Intl.DateTimeFormat('en-US',{'hour12':false, 'minute':'2-digit', 'second':'2-digit'}),
+			
+			/*when timer is 00:00:00*/
+			time0:			newDate().getTime(),
+			
 			//is timer in work or break mode?
 			'switch-to-break':false,
 
@@ -159,18 +164,17 @@
 			const newState={...state};
 			const {type,func,ms}=action;
 	
-			const {'dateObj':date, playing, setTimeoutId}=newState;
-			const [hh, mm, ss]=[date.getHours(), date.getMinutes(), date.getSeconds()];
+			const {'dateObj':date, playing, setTimeoutId, time0, formatter}=newState;
 			
-			//when app starts set 'work-total-minutes'
-			//and set date object 'dateObj'
+			//when app starts
+			//		set 'work-total-minutes'
+			//		and set date object 'dateObj'
 			//beacuse Session minutes are first
 			if(type==='work-total-minutes-set-once'){
 				const {totalMinutes}= action;
 				newState['work-total-minutes']=totalMinutes;
 
-				date.setHours(0);
-				date.setMinutes(totalMinutes);
+				date.setHours(0,totalMinutes);
 			
 			}
 			//when app starts set 'break-total-minutes'
@@ -179,8 +183,9 @@
 				newState['break-total-minutes']=totalMinutes;
 
 			}
-			//when work slider changes set its value
-			//and set date if needed
+			//when work slider changes 
+			//		set 'work-total-minutes'
+			//		and set date if mode is corret
 			else if(type==='work-total-minutes-set-event'){
 				const {totalMinutes}= action;
 				newState['work-total-minutes']=totalMinutes;
@@ -192,8 +197,9 @@
 					date.setHours(0,totalMinutes,0);
 				}
 			}
-			//when break slider changes set its value
-			//and set date if needed
+			//when work slider changes 
+			//		set 'break-total-minutes'
+			//		and set date if mode is corret
 			else if(type==='break-total-minutes-set-event'){
 				const {totalMinutes}= action;
 				newState['break-total-minutes']=totalMinutes;
@@ -213,7 +219,6 @@
 					newState['playing']=true;
 					newState['setTimeoutId']=setInterval(func,ms);
 					newState['button-icon']=newState['pause-icon'];
-					
 				}
 				//pause;
 				else if(playing===true){
@@ -230,14 +235,15 @@
 				}
 
 			}
-			else if(type==='set-dateObj-decrement'){
+			//subtract 1 second
+			else if(type==='date-decrement'){
 				//timer ended
-				if(hh===0 && mm===0 && ss===0){
+				if(date.getTime()===time0){
 					/*switch from Session <-> Break*/
 					newState['switch-to-break']= !newState['switch-to-break'];
-					date.setHours(0);
-					date.setSeconds(0);
-					date.setMinutes(newState['switch-to-break'] ? newState['break-total-minutes'] : newState['work-total-minutes'] );
+					date.setHours(0,
+					newState['switch-to-break'] ? newState['break-total-minutes'] : newState['work-total-minutes'],
+					0);
 					
 				}
 
@@ -246,7 +252,7 @@
 				date.setSeconds(s);				
 	
 
-				//console.log('set-dateObj-decrement');
+				//console.log('date-decrement');
 				
 			}
 			
@@ -287,8 +293,8 @@
 				ms:ms
 			}),
 			
-			'do-set-obj-decrement':()=>dispatchFunction({
-				type:'set-dateObj-decrement'
+			'do-date-decrement':()=>dispatchFunction({
+				type:'date-decrement'
 			}),
 			
 			'do-set-setTimeoutId':(func,ms)=>dispatchFunction({
@@ -458,7 +464,7 @@
 		//----------------------- component Timer ----------------------//
 		const Timer=props=>{
 			//value; is Date object
-			const {date,totalMinutes,hours,minutes,seconds,convertTotalMinutes,onPlayPause,mode,sentStyle,startPauseId,resetId,titleId,timeId,playPauseOnClick,buttonIcon,arrowRow}=props;
+			const {date,time,convertTotalMinutes,onPlayPause,mode,sentStyle,startPauseId,resetId,titleId,timeId,playPauseOnClick,buttonIcon,arrowRow}=props;
 
 			
 			const style={
@@ -516,9 +522,10 @@
 			return <div style={style}>
 			
 				<div style={timeStyle}>
-					<div id={timeId} >
-						{`${minutes}:${seconds}`}
+					<div >
+						{time}
 					</div>
+
 					{/*------------  ------------*/}
 					<div style={{
 						'display':'grid',
@@ -673,23 +680,25 @@
 					/>
 
 					<Timer
+					time={timerState['formatter'].format(date)}
 					date={date}
 					totalMinutes={timerState.totalMinutes}
 					convertTotalMinutes={convertTotalMinutes}
 					onPlayPause={e=>{					
-							props['do-play-pause'](e,props['do-set-obj-decrement'],1000);
+							props['do-play-pause'](e,props['do-date-decrement'],1000);
 						}
 					}
 					buttonIcon={timerState['button-icon']}
 					sentStyle={timerStyle}
 					startPauseId="start_stop"
+					
+					/*required id s to pass tests;*/
 					resetId="reset"
-					titleId="timer-label"
-					timeId="session-length"
+					titleId="timer-label"	/*hide; show 'Session' or 'Break';*/
+					timeId="time-left"		/*show e.g. 60:00 then 59:59*/
+					
+					
 					arrowRow={timerState['switch-to-break'] ? 2 : 1}
-					hours={padtime(date.getHours())}
-					minutes={padtime(date.getMinutes())}
-					seconds={padtime(date.getSeconds())}
 					/>
 					
 					<footer style={footerStyle}><p>by Abdullah Fatota</p></footer>
