@@ -27,7 +27,7 @@
 			margin: 0;
 		}
 		*{
-			outline:1px solid black;
+			outline:0px solid black;
 			font-family: "Consolas","Lucida Console", monospace, "Tahoma", sans-serif;
 			color: black
 		}
@@ -45,47 +45,12 @@
 
 		//----------------------- global objects ----------------------//
 		const newDate= (h=0,totalMinutes=0,s=0)=>{
-			
 			const obj=new Date(0);
-			
 			obj.setHours(h, totalMinutes, s);
 			return obj;
 		};
-		
-		//totalMinutes can be >=60
-		const convertTotalMinutes=(totalMinutes,asString=false)=>{
-			const hours=	Math.floor(totalMinutes/60);
-			
-			//minutes are in range [0-59]
-			const minutes=	totalMinutes%60;
-			
-			
-			if(asString){
-				const [h,m,s]= [`${hours<10 ? '0' : ''}${hours}`,
-				`${minutes<10 ? '0' : ''}${minutes}`,
-				'00', ];
-				
-				return {
-					hours:	h,
-					minutes:m,
-					seconds:s
-				};
-			}
-			else
-				return {
-				hours:	hours,
-				minutes:minutes,
-				seconds:0
-			};
-		};
-		
-		//
-		const formatTotalMinutes= totalMinutes=>{
-			const {hours,minutes}= convertTotalMinutes(totalMinutes);
-			
-			return hours>=1 ? `${hours} hour(s), ${minutes} minute(s)` : `${minutes} minute(s)`;
-		};
 		const padtime=int=>	`${int<10?'0':''}${int}`;
+
 		//----------------------- break state ----------------------//
 		const breakSliderState0={
 			/*total minutes; can be >=60*/
@@ -95,6 +60,7 @@
 			max:			60,/*10hours*/
 			defaultMinutes:	5/*5*/
 		};
+		breakSliderState0.minutes= breakSliderState0.defaultMinutes;
 		//----------------------- work state ----------------------//
 		const workSliderState0={
 			/*total minutes; can be >=60*/
@@ -104,6 +70,7 @@
 			max:			60,
 			defaultMinutes:	25/*25*/
 		};
+		workSliderState0.minutes= workSliderState0.defaultMinutes;
 		//----------------------- timer state ----------------------//
 		const timerState0={
 			audio:			'',
@@ -112,7 +79,7 @@
 			
 			formatter:		new Intl.DateTimeFormat('en-US',{'hour12':false, 'minute':'2-digit', 'second':'2-digit'}),
 			
-			/*when timer is 00:00:00*/
+			/*time timer is 00:00:00*/
 			time0:			newDate().getTime(),
 			
 			//is timer in work or break mode?
@@ -295,18 +262,6 @@
 		//----------------------- map dispatch to props ----------------------//
 		const mapDispatchToProps= dispatchFunction=>({
 			
-			/*--ONCE range 1 & 2 set minutes--*/
-			'do-break-range-set-minutes-once':minutes=>dispatchFunction({
-				type:'break-range-set-minutes-once',
-				minutes:minutes
-			}),
-			
-			'do-work-range-set-minutes-once':minutes=>dispatchFunction({
-				type:'work-range-set-minutes-once',
-				minutes:minutes
-			}),
-			
-			
 			/*--EVENT; range 1 & 2 onChange; set minutes--*/
 			'do-break-range-onchange-minutes-event':event=>dispatchFunction({
 				type:'break-range-onchange-minutes',
@@ -408,10 +363,8 @@
 		//----------------------- component Slider ----------------------//
 		const Slider=props=>{
 	
-			const {sentStyle,min,max,minutes,defaultMinutes,onChange,plusId,minusId,valueId,formatTotalMinutes}=props;
-			
-			const text= formatTotalMinutes(minutes);
-			
+			const {sentStyle,min,max,minutes,defaultMinutes,onChange,plusId,minusId,valueId}=props;
+						
 			const style={
 				'display':'grid',
 				'grid-gap':'0.5rem',
@@ -423,15 +376,15 @@
 			
 			/*HIDDEN; FOR Testing purposes; value must an element by itself */
 			const valueStyle={
-				/*'color':'transparent',*/
 				'grid-column':'1',
-				'grid-row':'1',
-				'text-align':'center'
+				'grid-row':'3',
+				'color':'transparent',
+				'font-size':'0'
 			};
 			
 			/*SHOWN;*/
 			const afterValueStyle={
-				'grid-column':'2/4',
+				'grid-column':'1/4',
 				'grid-row':'1',
 				'text-align':'center'
 			};
@@ -453,7 +406,7 @@
 				</div>
 				
 				<div style={afterValueStyle}>
-					{text}
+					{minutes} minute(s)
 				</div>
 
 				<Button id={plusId} sentStyle={buttonStyle} text={'-'} onClick={b1}/>
@@ -466,7 +419,7 @@
 
 		//----------------------- component SessionLength ----------------------//
 		const SessionLength=props=>{
-			const {hideZindex,hideOpacity,sentStyle,text,slider,innerId,plusId,minusId,timeValueId,formatTotalMinutes}=props;
+			const {hideZindex,hideOpacity,sentStyle,text,slider,innerId,plusId,minusId,timeValueId}=props;
 			const {min,max,minutes,defaultMinutes,onChange}=slider;
 			const style={
 				display:'grid',
@@ -500,13 +453,13 @@
 				
 				<div style={textStyle} id={innerId}>{text}</div>
 				
-				<Slider sentStyle={sliderStyle} min={min} max={max} onChange={onChange} minutes={minutes} defaultMinutes={defaultMinutes} plusId={plusId} minusId={minusId} valueId={timeValueId} formatTotalMinutes={formatTotalMinutes}/>
+				<Slider sentStyle={sliderStyle} min={min} max={max} onChange={onChange} minutes={minutes} defaultMinutes={defaultMinutes} plusId={plusId} minusId={minusId} valueId={timeValueId} />
 				
 			</div>;
 		};
 		//----------------------- component Timer ----------------------//
 		const Timer=props=>{
-			const {title,audioId,date,mm,ss,convertTotalMinutes,onPlayPause,onReset,sentStyle,startPauseId,resetId,titleId,timeId,playPauseOnClick,buttonIcon,arrowRow}=props;
+			const {title,audioId,date,mm,ss,onPlayPause,onReset,sentStyle,startPauseId,resetId,titleId,timeId,playPauseOnClick,buttonIcon,arrowRow}=props;
 
 			
 			const style={
@@ -565,7 +518,6 @@
 			
 				<div style={timeStyle}>
 				
-					<div id={titleId}>{title}</div>
 					<div id={timeId}>{mm}:{ss}</div>
 
 					{/*------------ Session/Break + Arrow ------------*/}
@@ -607,19 +559,19 @@
 					{/*------------  end of box ------------*/}
 				</div>
 				
+				<Button id={startPauseId} onClick={onPlayPause} sentStyle={{...buttonStyle,...playPauseStyle}} className={buttonIcon} />
 				
+				<Button id={resetId} onClick={onReset} sentStyle={{...buttonStyle,...resetStyle}} className="fa-solid fa-stop"/>				
 				
 				
 				<div style={dateStyle}>
 					{`${date}`}
+					<div id={titleId} style={{
+						'font-size':'0'
+					}}>{title}
+					</div>	
 				</div>
-				
-				
-				
-				<Button id={startPauseId} onClick={onPlayPause} sentStyle={{...buttonStyle,...playPauseStyle}} className={buttonIcon} />
-				
-				<Button id={resetId} onClick={onReset} sentStyle={{...buttonStyle,...resetStyle}} className="fa-solid fa-stop"/>
-				
+						
 				<audio id={audioId} src="beep.ogg"/>
 
 			</div>;
@@ -708,7 +660,6 @@
 					slider={workObject}
 					timeValueId="session-length"
 					sentStyle={workSliderStyle}
-					formatTotalMinutes={formatTotalMinutes}
 					hideOpacity={playing===false || playing==='' ? '1' : '0'}
 					hideZindex={playing===false || playing==='' ? '-1' : '99'}
 					/>
@@ -721,7 +672,6 @@
 					slider={breakObject}
 					timeValueId="break-length"
 					sentStyle={breakSliderStyle}
-					formatTotalMinutes={formatTotalMinutes}
 					hideOpacity={playing===false || playing==='' ? '1' : '0'}
 					hideZindex={playing===false || playing==='' ? '-1' : '99'}
 					/>
@@ -731,8 +681,6 @@
 					ss={padtime(ss)}
 					date={date}
 					audioId='beep'
-					totalMinutes={timerState.totalMinutes}
-					convertTotalMinutes={convertTotalMinutes}
 					onPlayPause={e=>{					
 							props['do-play-pause'](e,props['do-date-decrement'],1000);
 						}
@@ -758,8 +706,6 @@
 			}
 			componentDidMount(){
 				const {props}=this;
-				props['do-break-range-set-minutes-once'](props.breakState.defaultMinutes);
-				props['do-work-range-set-minutes-once'](props.workState.defaultMinutes);
 				
 				props['do-break-total-minutes-set-once'](props.breakState.defaultMinutes);
 				props['do-work-total-minutes-set-once'](props.workState.defaultMinutes);
