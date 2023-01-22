@@ -704,16 +704,11 @@
 		const App2= connect(mapStateToProps, mapDispatchToProps)(App);
 		
 		//----------------------- react componentAppWrapper ----------------------//
-		class AppWrapper extends React.Component{
-			constructor(props){
-				super(props);		
-			}
-			render(){
-				//store prop IS REQUIRED.
-				return (<Provider store={store}>
-					<App2/>
-				</Provider>);
-			}
+		const AppWrapper=props=>{
+			//store prop IS REQUIRED.
+			return <Provider store={store}>
+				<App2/>
+			</Provider>;
 		}
 		//----------------------- put component AppWrapper in DOM ----------------------//
 
