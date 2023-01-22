@@ -10,6 +10,9 @@
 	<script src="./libraries/react.development.js"></script>
 	<script src="./libraries/react-dom.development.js"></script>
 	
+	<script src="./libraries/react.production.min.js"></script>
+	<script src="./libraries/react-dom.production.min.js"></script>
+	
 	<!-- redux https://unpkg.com/redux@4.2.0/dist/redux.js -->
 	<script src="./libraries/redux.js"></script>
 	
@@ -90,7 +93,7 @@
 
 			min:			1,
 			max:			60,/*10hours*/
-			defaultMinutes:	1/*5*/
+			defaultMinutes:	5/*5*/
 		};
 		//----------------------- work state ----------------------//
 		const workSliderState0={
@@ -99,10 +102,12 @@
 
 			min:			1,
 			max:			60,
-			defaultMinutes:	1/*25*/
+			defaultMinutes:	25/*25*/
 		};
 		//----------------------- timer state ----------------------//
 		const timerState0={
+			audio:			'',
+		
 			dateObj:		newDate(),
 			
 			formatter:		new Intl.DateTimeFormat('en-US',{'hour12':false, 'minute':'2-digit', 'second':'2-digit'}),
@@ -141,6 +146,9 @@
 			else if(type==='break-range-onchange-minutes'){
 				newState['minutes']=minutes;
 			}
+			else if(action.typeBreak==='on-reset'){
+				newState['minutes']=newState.defaultMinutes;
+			}
 			return newState;
 		}
 		//----------------------- work reducer ----------------------//
@@ -156,15 +164,19 @@
 			else if(type==='work-range-onchange-minutes'){
 				newState['minutes']=minutes;
 			}
+			else if(action.typeWork==='on-reset'){
+				newState['minutes']=newState.defaultMinutes;
+			}
+
 			return newState;
 		}
 		//----------------------- timer reducer ----------------------//
 		const timerReducer=(state={...timerState0},action)=>{
 
-			const newState={...state};
+			const newState={...state,'time-text':''};
 			const {type,func,ms}=action;
 	
-			const {'dateObj':date, playing, setTimeoutId, time0, formatter}=newState;
+			const {'dateObj':date, playing, setTimeoutId, time0, formatter, audio}=newState;
 			
 			//when app starts
 			//		set 'work-total-minutes'
@@ -173,8 +185,8 @@
 			if(type==='work-total-minutes-set-once'){
 				const {totalMinutes}= action;
 				newState['work-total-minutes']=totalMinutes;
-
 				date.setHours(0,totalMinutes);
+				
 			
 			}
 			//when app starts set 'break-total-minutes'
@@ -224,6 +236,7 @@
 				else if(playing===true){
 					newState['playing']=false;
 					clearInterval(setTimeoutId);
+					newState['setTimeoutId']='';
 					newState['button-icon']=newState['play-icon'];
 					
 				}
@@ -237,13 +250,17 @@
 			}
 			//subtract 1 second
 			else if(type==='date-decrement'){
-				//timer ended
+				//timer ended; play beep sound
 				if(date.getTime()===time0){
 					/*switch from Session <-> Break*/
 					newState['switch-to-break']= !newState['switch-to-break'];
+					
 					date.setHours(0,
 					newState['switch-to-break'] ? newState['break-total-minutes'] : newState['work-total-minutes'],
 					0);
+					
+					newState['audio'].play();
+					
 					
 				}
 
@@ -254,6 +271,20 @@
 
 				//console.log('date-decrement');
 				
+			}
+			else if(type==='set-audio-once'){
+				newState['audio']=action.audio;
+			}
+			//when stop is clicked
+			//		stop countdown
+			//		rewind audio
+			//		set default values to break & work sliders
+			else if(type==='on-reset'){
+				if(setTimeoutId !== ''){
+					clearInterval(setTimeoutId);
+					newState['setTimeoutId']='';
+				}
+				audio.currentTime= 0;
 			}
 			
 			return newState;
@@ -326,6 +357,18 @@
 			}),
 			
 			
+			//set audio DOM object reference; when page loads starts
+			'do-set-audio-once':domObject=>dispatchFunction({
+				type:'set-audio-once',
+				audio:domObject
+			}),
+			
+			//when stop button is clicked
+			'do-on-reset':event=>dispatchFunction({
+				type:'on-reset',
+				typeWork:'on-reset',
+				typeBreak:'on-reset'
+			})
 
 		});
 		
@@ -463,8 +506,7 @@
 		};
 		//----------------------- component Timer ----------------------//
 		const Timer=props=>{
-			//value; is Date object
-			const {date,time,convertTotalMinutes,onPlayPause,mode,sentStyle,startPauseId,resetId,titleId,timeId,playPauseOnClick,buttonIcon,arrowRow}=props;
+			const {title,audioId,date,mm,ss,convertTotalMinutes,onPlayPause,onReset,sentStyle,startPauseId,resetId,titleId,timeId,playPauseOnClick,buttonIcon,arrowRow}=props;
 
 			
 			const style={
@@ -522,11 +564,11 @@
 			return <div style={style}>
 			
 				<div style={timeStyle}>
-					<div >
-						{time}
-					</div>
+				
+					<div id={titleId}>{title}</div>
+					<div id={timeId}>{mm}:{ss}</div>
 
-					{/*------------  ------------*/}
+					{/*------------ Session/Break + Arrow ------------*/}
 					<div style={{
 						'display':'grid',
 						'grid-template-columns':'repeat(2,auto)',
@@ -540,20 +582,20 @@
 						...common1
 					}}>
 					
-					{/*---- ----*/}
-						<div id={titleId} style={{
+					{/*---- "Session" ----*/}
+						<div style={{
 							'grid-column':'1',
 							'grid-row':'1',
 							...common1
 						}}>Session</div>
-					{/*---- ----*/}
+					{/*---- "Break" ----*/}
 						<div style={{
 							'grid-column':'1',
 							'grid-row':'2',
 							...common1
 						}}>Break
 						</div>
-					{/*---- ----*/}
+					{/*---- Arrow----*/}
 						<i style={{
 							'grid-column':'2',
 							'grid-row':`${arrowRow}`,
@@ -562,8 +604,10 @@
 						}} class="fa-solid fa-arrow-left"></i>
 						
 					</div>
-					{/*------------  ------------*/}
+					{/*------------  end of box ------------*/}
 				</div>
+				
+				
 				
 				
 				<div style={dateStyle}>
@@ -572,9 +616,11 @@
 				
 				
 				
-				<Button onClick={onPlayPause} sentStyle={{...buttonStyle,...playPauseStyle}} className={buttonIcon} />
+				<Button id={startPauseId} onClick={onPlayPause} sentStyle={{...buttonStyle,...playPauseStyle}} className={buttonIcon} />
 				
-				<Button id={resetId} sentStyle={{...buttonStyle,...resetStyle}} className="fa-solid fa-stop"/>
+				<Button id={resetId} onClick={onReset} sentStyle={{...buttonStyle,...resetStyle}} className="fa-solid fa-stop"/>
+				
+				<audio id={audioId} src="beep.ogg"/>
 
 			</div>;
 		};
@@ -613,6 +659,7 @@
 				
 				const {breakState,workState,timerState}=props;
 				const {'dateObj':date,playing}=timerState;
+				const [hh,mm,ss]=[date.getHours(), date.getMinutes(), date.getSeconds()]
 				
 				/* break state */
 				const breakObject={
@@ -680,25 +727,30 @@
 					/>
 
 					<Timer
-					time={timerState['formatter'].format(date)}
+					mm={hh>0 ? padtime(hh*60) : padtime(mm)}
+					ss={padtime(ss)}
 					date={date}
+					audioId='beep'
 					totalMinutes={timerState.totalMinutes}
 					convertTotalMinutes={convertTotalMinutes}
 					onPlayPause={e=>{					
 							props['do-play-pause'](e,props['do-date-decrement'],1000);
 						}
 					}
+					onReset={props['do-on-reset']}
 					buttonIcon={timerState['button-icon']}
 					sentStyle={timerStyle}
-					startPauseId="start_stop"
-					
 					/*required id s to pass tests;*/
+					startPauseId="start_stop"
 					resetId="reset"
 					titleId="timer-label"	/*hide; show 'Session' or 'Break';*/
 					timeId="time-left"		/*show e.g. 60:00 then 59:59*/
 					
 					
 					arrowRow={timerState['switch-to-break'] ? 2 : 1}
+					
+					title={timerState['switch-to-break']===false ? timerState['work-title'] :
+						timerState['break-title']}
 					/>
 					
 					<footer style={footerStyle}><p>by Abdullah Fatota</p></footer>
@@ -711,6 +763,8 @@
 				
 				props['do-break-total-minutes-set-once'](props.breakState.defaultMinutes);
 				props['do-work-total-minutes-set-once'](props.workState.defaultMinutes);
+				
+				props['do-set-audio-once'](document.querySelector('#beep'));
 
 			}
 		}
