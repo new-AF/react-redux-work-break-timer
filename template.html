@@ -226,7 +226,8 @@
 					newState['switch-to-break'] ? newState['break-total-minutes'] : newState['work-total-minutes'],
 					0);
 					
-					newState['audio'].play();
+					document.querySelector('#beep');
+					//newState['audio'].play();
 					
 					
 				}
@@ -578,142 +579,127 @@
 		};
 
 		//----------------------- component App WITHOUT LOCAL STATE ----------------------//
-		class App extends React.Component{
-			constructor(props){
-				super(props);
-			}
 
-			render(){
-				const style= {
-					'display':'grid',
-					'grid-template-columns':'0.5fr repeat(2, auto) 0.5fr',
-					'grid-template-rows':'0.5fr repeat(2, auto) 0.5fr',
-					'grid-gap':'2rem',
-					/**/
-					'align-items':'center',
-					'justify-items':'center',
-					/**/
-					'background-color': 'wheat',
-					'min-height': '100vh',
-				};
-				const headerStyle={
-					'font-weight':'bold',
-					'grid-column':'2/4',
-					'grid-row':'1'
-				};
-				const footerStyle={
-					'font-weight':'bold',
-					'grid-column':'2/4',
-					'grid-row':'4'
-				};
+		const App=props=>{
+			const style= {
+				'display':'grid',
+				'grid-template-columns':'0.5fr repeat(2, auto) 0.5fr',
+				'grid-template-rows':'0.5fr repeat(2, auto) 0.5fr',
+				'grid-gap':'2rem',
+				/**/
+				'align-items':'center',
+				'justify-items':'center',
+				/**/
+				'background-color': 'wheat',
+				'min-height': '100vh',
+			};
+			const headerStyle={
+				'font-weight':'bold',
+				'grid-column':'2/4',
+				'grid-row':'1'
+			};
+			const footerStyle={
+				'font-weight':'bold',
+				'grid-column':'2/4',
+				'grid-row':'4'
+			};
+		
+			const {breakState,workState,timerState}=props;
+			const {'dateObj':date,playing}=timerState;
+			const [hh,mm,ss]=[date.getHours(), date.getMinutes(), date.getSeconds()]
+			
+			/* break state */
+			const breakObject={
+				onChange:		event=>{
+									props['do-break-range-onchange-minutes-event'](event),
+									props['do-break-total-minutes-set-event'](event)
+								},
+				...breakState
+			};
+			
+			/* work state */
+			const workObject={
+				onChange:		event=>{
+									props['do-work-range-onchange-minutes-event'](event),
+									props['do-work-total-minutes-set-event'](event)
+								},
+				...workState
+			};
+			const timerStyle={
+				'grid-column':'2/4',
+				'grid-row':'2',
+				'justify-self':'stretch'
+			};
+			const workSliderStyle={
+				'grid-column':'2',
+				'grid-row':'3',	
+				'justify-self':'stretch'
+			};	
+			const breakSliderStyle={
+				'grid-column':'3',
+				'grid-row':'3',
+				'justify-self':'stretch'
+			};
 
-				const props=this.props;
+			
+			return (
+			<div style={style}>
 				
-				const {breakState,workState,timerState}=props;
-				const {'dateObj':date,playing}=timerState;
-				const [hh,mm,ss]=[date.getHours(), date.getMinutes(), date.getSeconds()]
-				
-				/* break state */
-				const breakObject={
-					onChange:		event=>{
-										props['do-break-range-onchange-minutes-event'](event),
-										props['do-break-total-minutes-set-event'](event)
-									},
-					...breakState
-				};
-				
-				/* work state */
-				const workObject={
-					onChange:		event=>{
-										props['do-work-range-onchange-minutes-event'](event),
-										props['do-work-total-minutes-set-event'](event)
-									},
-					...workState
-				};
-				const timerStyle={
-					'grid-column':'2/4',
-					'grid-row':'2',
-					'justify-self':'stretch'
-				};
-				const workSliderStyle={
-					'grid-column':'2',
-					'grid-row':'3',	
-					'justify-self':'stretch'
-				};	
-				const breakSliderStyle={
-					'grid-column':'3',
-					'grid-row':'3',
-					'justify-self':'stretch'
-				};
+				<h1 style={headerStyle}>React Redux Work/Break Timer</h1>
 
+				<SessionLength
+				text="Session Length"
+				plusId="break-decrement"
+				minusId="session-decrement"
+				innerId="session-label"
+				slider={workObject}
+				timeValueId="session-length"
+				sentStyle={workSliderStyle}
+				hideOpacity={playing===false || playing==='' ? '1' : '0'}
+				hideZindex={playing===false || playing==='' ? '-1' : '99'}
+				/>
 				
-				return (
-				<div style={style}>
-					
-					<h1 style={headerStyle}>React Redux Work/Break Timer</h1>
+				<SessionLength
+				text="Break Length"
+				plusId="break-increment"
+				minusId="session-increment"
+				innerId="break-label"
+				slider={breakObject}
+				timeValueId="break-length"
+				sentStyle={breakSliderStyle}
+				hideOpacity={playing===false || playing==='' ? '1' : '0'}
+				hideZindex={playing===false || playing==='' ? '-1' : '99'}
+				/>
 
-					<SessionLength
-					text="Session Length"
-					plusId="break-decrement"
-					minusId="session-decrement"
-					innerId="session-label"
-					slider={workObject}
-					timeValueId="session-length"
-					sentStyle={workSliderStyle}
-					hideOpacity={playing===false || playing==='' ? '1' : '0'}
-					hideZindex={playing===false || playing==='' ? '-1' : '99'}
-					/>
-					
-					<SessionLength
-					text="Break Length"
-					plusId="break-increment"
-					minusId="session-increment"
-					innerId="break-label"
-					slider={breakObject}
-					timeValueId="break-length"
-					sentStyle={breakSliderStyle}
-					hideOpacity={playing===false || playing==='' ? '1' : '0'}
-					hideZindex={playing===false || playing==='' ? '-1' : '99'}
-					/>
-
-					<Timer
-					mm={hh>0 ? padtime(hh*60) : padtime(mm)}
-					ss={padtime(ss)}
-					date={date}
-					audioId='beep'
-					onPlayPause={e=>{					
-							props['do-play-pause'](e,props['do-date-decrement'],1000);
-						}
+				<Timer
+				mm={hh>0 ? padtime(hh*60) : padtime(mm)}
+				ss={padtime(ss)}
+				date={date}
+				audioId='beep'
+				onPlayPause={e=>{					
+						props['do-play-pause'](e,props['do-date-decrement'],1000);
 					}
-					onReset={props['do-on-reset']}
-					buttonIcon={timerState['button-icon']}
-					sentStyle={timerStyle}
-					/*required id s to pass tests;*/
-					startPauseId="start_stop"
-					resetId="reset"
-					titleId="timer-label"	/*hide; show 'Session' or 'Break';*/
-					timeId="time-left"		/*show e.g. 60:00 then 59:59*/
-					
-					
-					arrowRow={timerState['switch-to-break'] ? 2 : 1}
-					
-					title={timerState['switch-to-break']===false ? timerState['work-title'] :
-						timerState['break-title']}
-					/>
-					
-					<footer style={footerStyle}><p>by Abdullah Fatota</p></footer>
-				</div>);
-			}
-			componentDidMount(){
-				const {props}=this;
+				}
+				onReset={props['do-on-reset']}
+				buttonIcon={timerState['button-icon']}
+				sentStyle={timerStyle}
+				/*required id s to pass tests;*/
+				startPauseId="start_stop"
+				resetId="reset"
+				titleId="timer-label"	/*hide; show 'Session' or 'Break';*/
+				timeId="time-left"		/*show e.g. 60:00 then 59:59*/
 				
-				props['do-break-total-minutes-set-once'](props.breakState.defaultMinutes);
-				props['do-work-total-minutes-set-once'](props.workState.defaultMinutes);
 				
-				props['do-set-audio-once'](document.querySelector('#beep'));
-
-			}
+				arrowRow={timerState['switch-to-break'] ? 2 : 1}
+				
+				title={timerState['switch-to-break']===false ? timerState['work-title'] :
+					timerState['break-title']}
+				/>
+				
+				<footer style={footerStyle}><p>by Abdullah Fatota</p></footer>
+			</div>);
 		}
+
 		//----------------------- APP2 component ----------------------//
 		const App2= connect(mapStateToProps, mapDispatchToProps)(App);
 		
