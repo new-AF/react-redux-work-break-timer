@@ -116,7 +116,8 @@
 			'switch-to-break':isBreak}=newState;
 			
 			
-			console.info(newState,action,time0===date.getTime());
+			//console.info(newState,action,time0===date.getTime());
+			console.info(action.type,minutes,time0===date.getTime());
 			
 			/*range EVENT*/
 			if(type==='break-range-onchange-minutes'){
@@ -130,7 +131,7 @@
 			}
 			/*range EVENT*/
 			else if(type==='work-range-onchange-minutes'){
-				//console.log('new work minutes',minutes);
+				console.info('new work minutes',minutes);
 				newState['work-minutes']=minutes;
 				/*is timer in work mode*/
 				if(isBreak===false){
@@ -145,16 +146,23 @@
 					clearInterval(setTimeoutId);
 					newState['setTimeoutId']='';
 				}
+				//rewind audio
 				audio.pause();
 				audio.currentTime=0;
+				
+				//reset 'playing', 'switch-to-break'
 				newState['playing']=false;
 				newState['switch-to-break']=false;
+				
+				//reset 'work-minutes', 'date', 'text' to 'work-default-minutes'
+				//'break-minutes' to 'break-default-minutes'
 				const minutes=workSliderState0['work-default-minutes'];
-				//console.log(minutes,workSliderState0);
 				newState['work-minutes']=minutes;
 				newState['break-minutes']=breakSliderState0['break-default-minutes'];
 				newState.text=padtime(minutes)
 				date.setHours(0,minutes,0);
+				
+				//set play icon
 				newState['button-icon']=newState['play-icon'];
 
 			}
@@ -239,6 +247,7 @@
 			}),
 			
 			/* play-pause button clicked */
+			/* call setInterval with function & time period */
 			'do-play-pause':(event,func,ms)=>dispatchFunction({
 				type:'play-pause',
 				func:func,
@@ -248,13 +257,6 @@
 			/* decrement seconds of 'date' */
 			'do-date-decrement':()=>dispatchFunction({
 				type:'date-decrement'
-			}),
-			
-			/* call setInterval with function & time period */
-			'do-set-setTimeoutId':(func,ms)=>dispatchFunction({
-				type:'set-setTimeoutId',
-				func:func,
-				ms:ms
 			}),
 			
 			//set audio DOM object reference; when page loads starts
@@ -336,24 +338,27 @@
 			};
 			
 			/*simulate triggering event*/
-			const b1= e=>onChange({target:{valueAsNumber: minutes>min && minutes<=max ? minutes-1 : minutes }});
-			const b2= e=>onChange({target:{valueAsNumber: minutes>=min && minutes<max ? minutes+1 : minutes }});
+			const fsubtract= e=>onChange({target:{valueAsNumber: minutes>min && minutes<=max ? minutes-1 : minutes }});
+			const fadd= e=>onChange({target:{valueAsNumber: minutes>=min && minutes<max ? minutes+1 : minutes }});
 			
 			return <div style={style}>
-
+				<div id={valueId} style={valueStyle}>
+					{minutes}
+				</div>
+				
 				<div style={textStyle}>
 					{minutes} minute(s)
 				</div>
 
-				<Button id={plusId} sentStyle={buttonStyle} text={'-'} onClick={b1}/>
+
+
+				<Button id={minusId} sentStyle={buttonStyle} text={'-'} onClick={fsubtract}/>
 				
 				<Range value={minutes} min={min} max={max} onChange={onChange}/>
 				
-				<Button id={minusId} sentStyle={buttonStyle} text={'+'} onClick={b2}/>
+				<Button id={plusId} sentStyle={buttonStyle} text={'+'} onClick={fadd}/>
 
-				<div id={valueId} style={valueStyle}>
-					{minutes}
-				</div>
+
 
 			</div>;
 		};
@@ -594,7 +599,7 @@
 
 					<SessionLength
 					text="Session Length"
-					plusId="break-decrement"
+					plusId="session-increment"
 					minusId="session-decrement"
 					innerId="session-label"
 					slider={workObject}
@@ -607,7 +612,7 @@
 					<SessionLength
 					text="Break Length"
 					plusId="break-increment"
-					minusId="session-increment"
+					minusId="break-decrement"
 					innerId="break-label"
 					slider={breakObject}
 					timeValueId="break-length"
