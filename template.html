@@ -7,11 +7,11 @@
 		
 	</title>
 	<script src="./libraries/babel.min.js"></script>
-	<!-- <script src="./libraries/react.development.js"></script> -->
-	<!-- <script src="./libraries/react-dom.development.js"></script> -->
+	<script src="./libraries/react.development.js"></script>
+	<script src="./libraries/react-dom.development.js"></script>
 	
-	<script src="./libraries/react.production.min.js"></script>
-	<script src="./libraries/react-dom.production.min.js"></script>
+	<!-- <script src="./libraries/react.production.min.js"></script> -->
+	<!-- <script src="./libraries/react-dom.production.min.js"></script> -->
 	
 	<!-- redux https://unpkg.com/redux@4.2.0/dist/redux.js -->
 	<script src="./libraries/redux.js"></script>
@@ -108,36 +108,55 @@
 		timerState0['date'].setMinutes(workSliderState0['work-default-minutes']);
 		//----------------------- break reducer ----------------------//
 		const rootReducer=(state={...breakSliderState0,...workSliderState0,...timerState0}, action)=>{
+			
 			const {minutes,type,func,ms}=action;
 			
 			const newState={...state};
 			const {'date':date, playing, setTimeoutId, time0, formatter, audio,
-			'switch-to-break':isBreak, ignore}=newState;
+			'switch-to-break':isBreak}=newState;
 			
 			
-			//console.log(newState,action,time0===date.getTime());
+			console.info(newState,action,time0===date.getTime());
 			
 			/*range EVENT*/
 			if(type==='break-range-onchange-minutes'){
 				newState['break-minutes']=minutes;
 				/*is timer in break mode*/
 				if(isBreak===true){
-					date.setHours(0,minutes,0);
+					
 					newState.text= padtime(minutes);
+					date.setHours(0,minutes,0);
 				}
 			}
 			/*range EVENT*/
 			else if(type==='work-range-onchange-minutes'){
+				//console.log('new work minutes',minutes);
 				newState['work-minutes']=minutes;
 				/*is timer in work mode*/
 				if(isBreak===false){
-					date.setHours(0,minutes,0);
+					
 					newState.text= padtime(minutes);
+					date.setHours(0,minutes,0);
 				}
 			}
+			/*reset button clicked*/
 			else if(type==='on-reset'){
-				newState['work-minutes']=workSliderState0['default-work-minutes'];
-				newState['break-minutes']=breakSliderState0['default-break-minutes'];
+				if(setTimeoutId!==''){
+					clearInterval(setTimeoutId);
+					newState['setTimeoutId']='';
+				}
+				audio.pause();
+				audio.currentTime=0;
+				newState['playing']=false;
+				newState['switch-to-break']=false;
+				const minutes=workSliderState0['work-default-minutes'];
+				//console.log(minutes,workSliderState0);
+				newState['work-minutes']=minutes;
+				newState['break-minutes']=breakSliderState0['break-default-minutes'];
+				newState.text=padtime(minutes)
+				date.setHours(0,minutes,0);
+				newState['button-icon']=newState['play-icon'];
+
 			}
 	
 			//when play pause button is clicked
@@ -169,6 +188,7 @@
 			//subtract 1 second
 			else if(type==='date-decrement'){
 				//timer ended; play beep sound
+				//console.info('date-decrement',newState);
 				if(date.getTime()===time0){
 					/*switch from Session <-> Break*/
 					newState['switch-to-break']= !newState['switch-to-break'];
@@ -597,7 +617,7 @@
 					/>
 
 					<Timer
-					text={props.text ? props.text : workObject.defaultMinutes}
+					text={props.text}
 					date={date}
 					audioId='beep'
 					onPlayPause={event=>				
@@ -614,6 +634,7 @@
 					arrowRow={props['switch-to-break'] ? 2 : 1}
 					title={props['switch-to-break']===false ? props['work-title'] :
 					props['break-title']}
+					onLoad={e=>console.info('Timer comp loaded')}
 					/>
 					
 					<footer style={footerStyle}><p>by Abdullah Fatota</p></footer>
