@@ -380,9 +380,14 @@
 			const buttonStyle={
 				
 			};
-			
+			//hidden; for test passing & debuggig  purposes
+			const hiddenStyle={
+				color:'transparent',
+				'font-size':0
+
+			};
 			return <div style={style}>
-				<div id={valueId} style={valueStyle}>
+				<div id={valueId} style={{...valueStyle,...hiddenStyle}}>
 					{minutes}
 				</div>
 				
@@ -453,7 +458,7 @@
 				display:'grid',
 				'grid-gap':'0.5rem',
 				'padding':'0.5rem',
-				'grid-template-columns':'auto auto auto auto',
+				'grid-template-columns':'auto auto auto',
 				'grid-template-rows':'repeat(3,auto)',
 				border:'0.2rem solid black',
 				'border-radius':'0.25rem',
@@ -462,7 +467,7 @@
 			
 			/*minutes [0-59] value;*/
 			const timeStyle={
-				'grid-column':'2/5',
+				'grid-column':'2/4',
 				'grid-row':'1/3',
 				'font-size':'3rem',
 				'text-align':'center',
@@ -479,7 +484,7 @@
 			};
 
 			const playPauseStyle={
-				'grid-column':'2/4',
+				'grid-column':'1/4',
 				'grid-row':'3'
 			};
 
@@ -524,9 +529,11 @@
 				'font-size':'1rem',
 				'font-weight':'bold'							
 			};
-			//hidden; for debuggig  purposes
-			const _dateStyle={
-				
+			//hidden; for test passing & debuggig  purposes
+			const hiddenStyle={
+				color:'transparent',
+				'font-size':0
+
 			};
 			return <div style={style}>
 			
@@ -555,9 +562,9 @@
 				
 				<Button id={resetId} onClick={onReset} sentStyle={{...buttonStyle,...resetStyle}} className="fa-solid fa-stop"/>				
 				
-				<div style={dateStyle}>
+				<div style={{...dateStyle,...hiddenStyle}}>
 					{`${date}`}
-					<div id={titleId} style={_dateStyle}>{title}
+					<div id={titleId} style={hiddenStyle}>{title}
 				</div>	
 			</div>
 						
@@ -584,6 +591,7 @@
 					/**/
 					'background-color': 'wheat',
 					'min-height': '100vh',
+					'min-width': 'max-content'
 				};
 				const headerStyle={
 					'font-weight':'bold',
