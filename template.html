@@ -117,27 +117,48 @@
 			
 			
 			//console.info(newState,action,time0===date.getTime());
-			console.info(action.type,minutes,time0===date.getTime());
+			//console.info(action.type,minutes,time0===date.getTime());
 			
-			/*range EVENT*/
+			/* break range EVENT or
+			increment/decrement button */
 			if(type==='break-range-onchange-minutes'){
-				newState['break-minutes']=minutes;
+				let minutes2= minutes;
+				if(action.source==='button'){
+					const {val}= action;//'val'=  +1 or -1
+					const {'break-minutes':current, 'break-min':min, 'break-max':max}=newState;
+					const newval= current+val;
+
+					minutes2= (current !== '' && newval >= min && newval <= max) ? newval : current;
+
+				}
+				newState['break-minutes']=minutes2;
 				/*is timer in break mode*/
 				if(isBreak===true){
 					
-					newState.text= padtime(minutes);
-					date.setHours(0,minutes,0);
+					newState.text= padtime(minutes2);
+					date.setHours(0,minutes2,0);
 				}
 			}
-			/*range EVENT*/
+			/* work range EVENT or
+			increment/decrement button */
 			else if(type==='work-range-onchange-minutes'){
-				console.info('new work minutes',minutes);
-				newState['work-minutes']=minutes;
+				//console.info('new work minutes',minutes);
+
+				let minutes2= minutes;
+				if(action.source==='button'){
+					const {val}= action;//'val'=  +1 or -1
+					const {'work-minutes':current, 'work-min':min, 'work-max':max}=newState;
+					const newval= current+val;
+					
+					minutes2= (current !== '' && newval >= min && newval <= max) ? newval : current;
+					
+				}
+				newState['work-minutes']=minutes2;
 				/*is timer in work mode*/
 				if(isBreak===false){
 					
-					newState.text= padtime(minutes);
-					date.setHours(0,minutes,0);
+					newState.text= padtime(minutes2);
+					date.setHours(0,minutes2,0);
 				}
 			}
 			/*reset button clicked*/
@@ -198,33 +219,41 @@
 				//timer ended; play beep sound
 				//console.info('date-decrement',newState);
 				if(date.getTime()===time0){
+					const isbreak= !isBreak;
 					/*switch from Session <-> Break*/
-					newState['switch-to-break']= !newState['switch-to-break'];
+					newState['switch-to-break']= isbreak;
 					
+					/*set text*/
+					newState.text= padtime(isbreak ? newState['break-minutes'] : newState['work-minutes']);
+
+					/*set date*/
 					date.setHours(
 					0,
-					newState['switch-to-break'] ? newState['break-minutes'] : newState['work-minutes'],
+					isbreak ? newState['break-minutes'] : newState['work-minutes'],
 					0);
 					
 					newState['audio'].play();
 					
-					
+			
+				}
+				else {
+					//decrement seconds	
+					//console.log('before',date);
+					date.setSeconds(date.getSeconds()-1);
+					//newState.ignore=!ignore;
+					newState.text= formatter.format(date);
+					//console.log('after',date);
+
+					//console.log('date-decrement');
+
 				}
 
-				//decrement seconds	
-				//console.log('before',date);
-				date.setSeconds(date.getSeconds()-1);
-				//newState.ignore=!ignore;
-				newState.text= formatter.format(date);
-				//console.log('after',date);
 
-				//console.log('date-decrement');
 				
 			}
 			else if(type==='set-audio-once'){
 				newState['audio']=action.audio;
 			}
-
 			
 			return newState;
 		};
@@ -268,6 +297,21 @@
 			//when stop button is clicked
 			'do-on-reset':event=>dispatchFunction({
 				type:'on-reset',
+			}),
+
+			/* 'val' is +1 or -1 */
+			'do-break-slider-add-sub':(event,val)=>dispatchFunction({
+				type:'break-range-onchange-minutes',
+				val:val,
+				source:'button'
+
+			}),
+
+			/* 'val' is +1 or -1 */
+			'do-work-slider-add-sub':(event,val)=>dispatchFunction({
+				type:'work-range-onchange-minutes',
+				val:val,
+				source:'button'
 			})
 
 		});
@@ -304,7 +348,7 @@
 		//----------------------- component Slider ----------------------//
 		const Slider=props=>{
 	
-			const {sentStyle,min,max,minutes,onChange,plusId,minusId,valueId}=props;
+			const {sentStyle,min,max,minutes,onChange,plusId,minusId,valueId,fadd,fsub}=props;
 						
 			const style={
 				'display':'grid',
@@ -337,10 +381,6 @@
 				
 			};
 			
-			/*simulate triggering event*/
-			const fsubtract= e=>onChange({target:{valueAsNumber: minutes>min && minutes<=max ? minutes-1 : minutes }});
-			const fadd= e=>onChange({target:{valueAsNumber: minutes>=min && minutes<max ? minutes+1 : minutes }});
-			
 			return <div style={style}>
 				<div id={valueId} style={valueStyle}>
 					{minutes}
@@ -352,7 +392,7 @@
 
 
 
-				<Button id={minusId} sentStyle={buttonStyle} text={'-'} onClick={fsubtract}/>
+				<Button id={minusId} sentStyle={buttonStyle} text={'-'} onClick={fsub}/>
 				
 				<Range value={minutes} min={min} max={max} onChange={onChange}/>
 				
@@ -366,7 +406,7 @@
 		//----------------------- component SessionLength ----------------------//
 		const SessionLength=props=>{
 			const {slider,hideZindex,hideOpacity,sentStyle,text,innerId,plusId,minusId,timeValueId}=props;
-			const {min,max,minutes,defaultMinutes,onChange}=slider;
+			const {min,max,minutes,defaultMinutes,onChange,fadd,fsub}=slider;
 			const style={
 				display:'grid',
 				'grid-template-columns':'auto',
@@ -400,7 +440,7 @@
 				<div style={titleStyle} id={innerId}>{text}</div>
 				
 				<Slider sentStyle={sliderStyle} min={min} max={max} onChange={onChange} minutes={minutes? minutes : defaultMinutes}
-				plusId={plusId} minusId={minusId} valueId={timeValueId} />
+				plusId={plusId} minusId={minusId} valueId={timeValueId} fadd={fadd} fsub={fsub}/>
 				
 			</div>;
 		};
@@ -521,7 +561,7 @@
 				</div>	
 			</div>
 						
-				<audio id={audioId} src="beep.ogg"/>
+				<audio id={audioId} src="car2.wav"/>
 
 			</div>;
 		};
@@ -564,7 +604,9 @@
 					min:	props['break-min'],
 					max:	props['break-max'],
 					defaultMinutes:	props['break-default-minutes'],
-					onChange:		props['do-break-range-onchange-minutes-event']
+					onChange:		props['do-break-range-onchange-minutes-event'],
+					fadd:			e=>props['do-break-slider-add-sub'](e,1),
+					fsub:			e=>props['do-break-slider-add-sub'](e,-1),
 				};
 				const workObject={
 					minutes:props['work-minutes'],
@@ -572,6 +614,8 @@
 					max:	props['work-max'],
 					defaultMinutes:	props['work-default-minutes'],
 					onChange:		props['do-work-range-onchange-minutes-event'],
+					fadd:			e=>props['do-work-slider-add-sub'](e,1),
+					fsub:			e=>props['do-work-slider-add-sub'](e,-1),
 				};
 
 
