@@ -734,11 +734,30 @@
 
 	<script>
 		// hide test window
-		// triggers click event
-		window.onload=event=>{
-			const el=document.querySelector('#fcc_toggle');
-			el.click()
-		};
+
+		window.addEventListener('load', event=>{
+			// set project to test
+			const test=document.querySelector('#fcc_test_suite_wrapper');
+			// console.info({test});
+			const shadowRoot=test.shadowRoot;
+			
+
+			// const select=document.getElementById('test-suite-selector');
+			const select=shadowRoot.querySelector("#test-suite-selector");
+			// console.info({select});
+			select.options[9].selected=true;
+
+			const onChangeEvent=new CustomEvent('onchange', {bubbles: true});
+			//trigger event
+			select.dispatchEvent(onChangeEvent);
+
+			// hide test window
+			const el=shadowRoot.querySelector('#fcc_toggle');
+			// console.info({el});
+			// console.log('FCC_Global')
+			// el.click()
+			FCC_Global.FCCCloseTestModal();
+		});
 	</script>
 </body>
 
