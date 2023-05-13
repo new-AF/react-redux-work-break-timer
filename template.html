@@ -702,6 +702,8 @@
 
 				props['do-set-audio-once'](document.querySelector('#beep'));
 
+
+
 			}
 		}
 		//----------------------- APP2 component ----------------------//
@@ -730,7 +732,14 @@
 	<!-- free code camp test suite -->
 	<script src="./libraries/test bundle.js"></script>
 
-	
+	<script>
+		// hide test window
+		// triggers click event
+		window.onload=event=>{
+			const el=document.querySelector('#fcc_toggle');
+			el.click()
+		};
+	</script>
 </body>
 
 </html>
