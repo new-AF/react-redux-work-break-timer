@@ -733,39 +733,8 @@
 	<script src="./libraries/test bundle.js"></script>
 
 	<script>
-		// script to hide test window
-
-		window.addEventListener('load', event=>{
-			// set project to test
-			const test=document.querySelector('#fcc_test_suite_wrapper');
-			// console.info({test});
-			const shadowRoot=test.shadowRoot;
-			
-
-			// const select=document.getElementById('test-suite-selector');
-			const select=shadowRoot.querySelector("#test-suite-selector");
-			// console.info({select});
-			select.options[9].selected=true;
-
-			const onChangeEvent=new CustomEvent('onchange', {bubbles: true});
-			//trigger event
-			select.dispatchEvent(onChangeEvent);
-
-			// hide test window
-			const el=shadowRoot.querySelector('#fcc_toggle');
-			// console.info({el});
-			// console.log('FCC_Global')
-			// el.click()
-			FCC_Global.FCCCloseTestModal();
-
-			const r = shadowRoot.querySelector("#fcc_foldout_menu").getBoundingClientRect();
-			
-			//hacky solution
-			//because in codepen.io `FCC_Global.FCCCloseTestModal()` does NOT work
-			if (r.x >= 0) {
-				el.click();
-			}
-		});
+		// I tested `true` but same result: window becomes hidden
+		localStorage.setItem('fCC_null_hide', false);
 	</script>
 </body>
 
