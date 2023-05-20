@@ -22,16 +22,9 @@
 	<!-- font awesome icons -->
 	<link href='./libraries/css/all.css' rel='stylesheet'>
 	
-	<style>
-		body{
-			margin: 0;
-		}
-		*{
-			outline:0px solid black;
-			font-family: "Consolas","Lucida Console", monospace, "Tahoma", sans-serif;
-			color: black
-		}
-	</style>
+	<!-- styles -->
+	<link href='./app.css' rel='stylesheet'>
+
 </head>
   
 <body>
@@ -410,7 +403,7 @@
 
 		//----------------------- component SessionLength ----------------------//
 		const SessionLength=props=>{
-			const {slider,hideZindex,hideOpacity,sentStyle,text,innerId,plusId,minusId,timeValueId}=props;
+			const {id,slider,hideZindex,hideOpacity,sentStyle,text,innerId,plusId,minusId,timeValueId}=props;
 			const {min,max,minutes,defaultMinutes,onChange,fadd,fsub}=slider;
 			const style={
 				display:'grid',
@@ -439,7 +432,7 @@
 				'grid-column':'1',
 				'grid-row':'2',
 			}
-			return <div style={style}>
+			return <div id={id} style={style}>
 				<div style={disableStyle}></div>
 				
 				<div style={titleStyle} id={innerId}>{text}</div>
@@ -451,7 +444,7 @@
 		};
 		//----------------------- component Timer ----------------------//
 		const Timer=props=>{
-			const {text,title,audioId,date,mm,ss,onPlayPause,onReset,sentStyle,startPauseId,resetId,titleId,timeId,playPauseOnClick,buttonIcon,arrowRow}=props;
+			const {id,text,title,audioId,date,mm,ss,onPlayPause,onReset,sentStyle,startPauseId,resetId,titleId,timeId,playPauseOnClick,buttonIcon,arrowRow}=props;
 
 			
 			const style={
@@ -535,7 +528,7 @@
 				'font-size':0
 
 			};
-			return <div style={style}>
+			return <div id={id} style={style}>
 			
 				{/*------------ Countdown & Box ------------*/}
 				<div style={timeStyle}>
@@ -582,7 +575,7 @@
 			render(){
 				const style= {
 					'display':'grid',
-					'grid-template-columns':'0.5fr repeat(2, auto) 0.5fr',
+					// 'grid-template-columns':'repeat(2, auto)',
 					'grid-template-rows':'0.5fr repeat(2, auto) 0.5fr',
 					'grid-gap':'2rem',
 					/**/
@@ -595,13 +588,13 @@
 				};
 				const headerStyle={
 					'font-weight':'bold',
-					'grid-column':'2/4',
+					// 'grid-column':'1/span 2',
 					'grid-row':'1'
 				};
 				const footerStyle={
 					'font-weight':'bold',
-					'grid-column':'2/4',
-					'grid-row':'4'
+					// 'grid-column':'1/span 2',
+					// 'grid-row':'4'
 				};
 
 				const props=this.props;
@@ -628,28 +621,29 @@
 
 
 				const timerStyle={
-					'grid-column':'2/4',
+					// 'grid-column':'1/span 2',
 					'grid-row':'2',
 					'justify-self':'stretch'
 				};
 				const workSliderStyle={
-					'grid-column':'2',
+					// 'grid-column':'1',
 					'grid-row':'3',	
 					'justify-self':'stretch'
 				};	
 				const breakSliderStyle={
-					'grid-column':'3',
-					'grid-row':'3',
+					// 'grid-column':'2',
+					// 'grid-row':'3',
 					'justify-self':'stretch'
 				};
 
 				
 				return (
-				<div style={style}>
+				<div id="app" style={style}>
 					
-					<h1 style={headerStyle}>Work Rest Timer</h1>
+					<h1 id="header" style={headerStyle}>Work Rest Timer</h1>
 
 					<SessionLength
+					id="work"
 					text="Session Length"
 					plusId="session-increment"
 					minusId="session-decrement"
@@ -662,6 +656,7 @@
 					/>
 					
 					<SessionLength
+					id="break"
 					text="Break Length"
 					plusId="break-increment"
 					minusId="break-decrement"
@@ -674,6 +669,7 @@
 					/>
 
 					<Timer
+					id="timer"
 					text={props.text}
 					date={date}
 					audioId='beep'
@@ -694,7 +690,7 @@
 					onLoad={e=>console.info('Timer comp loaded')}
 					/>
 					
-					<footer style={footerStyle}><p>by Abdullah Fatota</p></footer>
+					<footer id="footer" style={footerStyle}><p>by Abdullah Fatota</p></footer>
 				</div>);
 			}
 			componentDidMount(){
