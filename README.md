@@ -10,4 +10,4 @@ and then let the app automatically _**track time**_ and _**play a sound**_ when 
 
 [Select the project and try it live!](https://new-af.github.io/)
 
-![app live preview image](assets/1 react redux 1 work break timer.png)
+<img src="assets/1 react redux 1 work break timer.png" alt="preview image of live app"/>
