@@ -1,59 +1,74 @@
 * {
-  outline: 0px solid black;
-  font-family: "Consolas", "Lucida Console", monospace, "Tahoma", sans-serif;
-  color: black;
+    outline: 0px solid black;
+    font-family: "Consolas", "Lucida Console", monospace, "Tahoma", sans-serif;
+    color: black;
 }
 body {
-  margin: 0;
+    margin: 0;
 }
+#timer {
+    padding: 0.5rem;
+    column-gap: 0;
+}
+/*
+even though height is 0
+grid gap causes visible space;
+therefore remove it from grid layout.
+*/
+#timer-debug {
+    position: absolute;
+}
+.timer-button {
+}
+
 @media screen and (min-width: 320px) {
-  #app {
-    padding: 0 5%;
-  }
+    #app {
+        padding: 0 5%;
+    }
 }
 /* mobile first */
 @media screen and (max-width: 767px) {
-  #app {
-    grid-template-columns: repeat(2, auto);
-  }
-  #header {
-    grid-column: 1 / span 2;
-  }
-  #timer {
-    grid-column: 1 / span 2;
-  }
-  #work {
-    grid-column: 1 / span 2;
-  }
-  #break {
-    grid-column: 1 / span 2;
-    grid-row: 4;
-  }
-  #footer {
-    grid-column: 1 / span 2;
-    grid-row: 5;
-  }
+    #app {
+        grid-template-columns: repeat(2, auto);
+    }
+    #header {
+        grid-column: 1 / span 2;
+    }
+    #timer {
+        grid-column: 1 / span 2;
+    }
+    #work {
+        grid-column: 1 / span 2;
+    }
+    #break {
+        grid-column: 1 / span 2;
+        grid-row: 4;
+    }
+    #footer {
+        grid-column: 1 / span 2;
+        grid-row: 5;
+    }
 }
 /* tablet */
 @media screen and (min-width: 768px) {
-  #app {
-    grid-template-columns: 0.5fr repeat(2, auto) 0.5fr;
-  }
-  #header {
-    grid-column: 2 / span 2;
-  }
-  #timer {
-    grid-column: 2 / span 2;
-  }
-  #work {
-    grid-column: 2;
-  }
-  #break {
-    grid-column: 3;
-    grid-row: 3;
-  }
-  #footer {
-    grid-column: 2 / span 2;
-    grid-row: 4;
-  }
+    #app {
+        grid-template-columns: 0.5fr repeat(2, auto) 0.5fr;
+    }
+    #header {
+        grid-column: 2 / span 2;
+    }
+    #timer {
+        grid-column: 2 / span 2;
+    }
+    #work {
+        grid-column: 2;
+    }
+    #break {
+        grid-column: 3;
+        grid-row: 3;
+    }
+    #footer {
+        grid-column: 2 / span 2;
+        grid-row: 4;
+    }
 }

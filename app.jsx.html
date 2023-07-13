@@ -325,7 +325,7 @@
 				'cursor':'pointer',
 				...sentStyle
 			};
-			return <button id={id} className={className} style={style} onClick={onClick} onMouseDown={onMouseDown}>
+			return <button id={id} className={`${className} timer-button`} style={style} onClick={onClick} onMouseDown={onMouseDown}>
 				{text}
 			</button>;
 		};
@@ -451,7 +451,6 @@
 			const style={
 				display:'grid',
 				'grid-gap':'0.5rem',
-				'padding':'0.5rem',
 				'grid-template-columns':'auto auto auto',
 				'grid-template-rows':'repeat(3,auto)',
 				border:'0.2rem solid black',
@@ -556,7 +555,7 @@
 				
 				<Button id={resetId} onClick={onReset} sentStyle={{...buttonStyle,...resetStyle}} className="fa-solid fa-stop"/>				
 				
-				<div style={{...dateStyle,...hiddenStyle}}>
+				<div id="timer-debug" style={{...dateStyle,...hiddenStyle}}>
 					{`${date}`}
 					<div id={titleId} style={hiddenStyle}>{title}
 				</div>	
@@ -583,7 +582,6 @@
 					'align-items':'center',
 					'justify-items':'center',
 					/**/
-					'background-color': 'wheat',
 					'min-height': '100vh',
 					'min-width': 'max-content'
 				};
