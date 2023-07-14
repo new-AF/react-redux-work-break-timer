@@ -2,12 +2,11 @@
 
 Timer App to set:
 
-- how many minutes to work, *for example 25 minutes*,
-- how many minutes to take a break, *for example 5 minutes*,
+-   How many minutes to work, _for example 25 minutes_,
+-   How many minutes to take a break, _for example 5 minutes_,
 
-and then let the app automatically _**track time**_ and _**play a sound**_ when one session ends.
+then let the app automatically **track time** and **play a sound** when one session ends and the other begins.
 
+[Run the App!](https://new-af.github.io/)
 
-[Select the project and try it live!](https://new-af.github.io/)
-
-<img src="assets/1 react redux 1 work break timer.png" alt="preview image of live app"/>
+<img src="assets/preview.png" alt="preview image of live app"/>
